@@ -3,9 +3,10 @@ import uuid
 from typing import Dict
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
 
 from backend.models.schemas import InferenceRequest, InferenceResponse
-from backend.services.inference_service import run_batch_inference
+from backend.services.inference_service import get_overlay_path, run_batch_inference
 
 router = APIRouter()
 
@@ -69,3 +70,12 @@ async def get_inference_results(job_id: str):
         processed=job["processed"],
         results=job["results"],
     )
+
+
+@router.get("/inference/overlay/{image_id}")
+async def get_overlay_image(image_id: str):
+    """Return the segmentation overlay PNG for a given image."""
+    path = get_overlay_path(image_id)
+    if not path:
+        raise HTTPException(status_code=404, detail="Overlay not found")
+    return FileResponse(path, media_type="image/png")

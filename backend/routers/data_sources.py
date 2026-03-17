@@ -2,12 +2,17 @@ import os
 from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from backend.config import settings
 from backend.services.mapillary_service import (
     download_image,
     fetch_images_in_bbox,
+)
+
+SAMPLE_IMAGES_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "data", "sample_images")
 )
 
 router = APIRouter()
@@ -88,3 +93,29 @@ async def load_folder_images(request: FolderRequest):
             })
 
     return {"images": images, "count": len(images)}
+
+
+@router.get("/data/sample/list")
+async def list_sample_images():
+    """List available sample images from data/sample_images/."""
+    if not os.path.isdir(SAMPLE_IMAGES_DIR):
+        return {"images": [], "count": 0}
+    supported = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
+    images = []
+    for fname in sorted(os.listdir(SAMPLE_IMAGES_DIR)):
+        if os.path.splitext(fname)[1].lower() in supported:
+            images.append({
+                "image_id": fname,
+                "path": os.path.join(SAMPLE_IMAGES_DIR, fname),
+                "filename": fname,
+            })
+    return {"images": images, "count": len(images)}
+
+
+@router.get("/data/sample/image/{filename}")
+async def get_sample_image(filename: str):
+    """Serve a sample image file."""
+    path = os.path.join(SAMPLE_IMAGES_DIR, filename)
+    if not os.path.isfile(path):
+        raise HTTPException(status_code=404, detail="Image not found")
+    return FileResponse(path, media_type="image/jpeg")
