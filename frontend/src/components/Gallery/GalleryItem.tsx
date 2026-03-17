@@ -45,9 +45,14 @@ const badgeBgs = {
   low: 'bg-gray-500',
 };
 
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').replace('/api', '');
+
 export default function GalleryItem({ item, onClick }: Props) {
   const metric = getPrimaryMetric(item);
-  const imgSrc = item.image_url || `https://placehold.co/300x200/e2e8f0/94a3b8?text=${encodeURIComponent(item.image_id)}`;
+  const rawUrl = item.image_url || '';
+  const imgSrc = rawUrl.startsWith('/api')
+    ? `${API_BASE}${rawUrl}`
+    : rawUrl || `https://placehold.co/300x200/e2e8f0/94a3b8?text=${encodeURIComponent(item.image_id)}`;
 
   return (
     <button

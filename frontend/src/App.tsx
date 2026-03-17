@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
 import ConfigPanel from './components/ConfigPanel/ConfigPanel';
 import Gallery from './components/Gallery/Gallery';
@@ -23,19 +23,28 @@ export default function App() {
     processed: number;
   }>({ running: false, total: 0, processed: 0 });
   const [filters, setFilters] = useState<FilterRule[]>([]);
-  const [demoMode, setDemoMode] = useState(false);
+  const [backendDemoMode, setBackendDemoMode] = useState(false);
   const [backendUp, setBackendUp] = useState(true);
 
-  // Check backend health + demo mode on mount
+  // Check backend health on mount
   useEffect(() => {
     api
       .get('/health')
       .then((res) => {
-        setDemoMode(res.data.demo_mode ?? false);
+        setBackendDemoMode(res.data.demo_mode ?? false);
         setBackendUp(true);
       })
       .catch(() => setBackendUp(false));
   }, []);
+
+  // Determine if current results are real or demo
+  const resultsAreDemo = useMemo(() => {
+    if (results.length === 0) return false;
+    return results.some((r: any) => r.demo_mode === true);
+  }, [results]);
+
+  // Show demo banner only when backend is in demo mode AND results are demo (or no results yet)
+  const showDemoBanner = backendDemoMode && (results.length === 0 || resultsAreDemo);
 
   const handleDataSourceChange = useCallback((d: DataSourceConfig) => {
     setDataSource(d);
@@ -48,10 +57,10 @@ export default function App() {
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       {/* Demo mode banner */}
-      {demoMode && (
+      {showDemoBanner && (
         <div className="shrink-0 bg-amber-500 text-amber-950 text-xs font-semibold flex items-center justify-center gap-2 py-1.5 px-4">
           <FiAlertTriangle className="text-sm" />
-          DEMO MODE — Using simulated data and mock inference results. Configure API tokens in .env for real analysis.
+          DEMO MODE — Using simulated data. Select "Sample Images" data source to run real SegFormer inference.
         </div>
       )}
 
@@ -74,7 +83,7 @@ export default function App() {
             jobStatus={jobStatus}
             onJobStatusChange={setJobStatus}
             onResults={setResults}
-            demoMode={demoMode}
+            demoMode={showDemoBanner}
           />
         </div>
         <div className="flex-1 min-w-0">

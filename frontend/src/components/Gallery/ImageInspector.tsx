@@ -21,56 +21,64 @@ const OVERLAY_COLORS: Record<string, string> = {
 
 type TabKey = 'source' | 'overlay' | 'sidebyside';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+
 export default function ImageInspector({ item, modelType, onClose }: Props) {
   const [tab, setTab] = useState<TabKey>('source');
   const [flagged, setFlagged] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imgSrc = item.image_url || `https://placehold.co/600x400/e2e8f0/94a3b8?text=${encodeURIComponent(item.image_id)}`;
 
+  const isDemo = (item as any).demo_mode === true;
   const isSegmentation = 'class_ratios' in item;
   const isDetection = 'detections' in item;
 
-  // Draw detection boxes on canvas
+  // Build source image URL: backend-served for real results, direct URL for demo
+  const imgSrc = item.image_url?.startsWith('/api')
+    ? `${API_URL.replace('/api', '')}${item.image_url}`
+    : item.image_url || `https://placehold.co/600x400/e2e8f0/94a3b8?text=${encodeURIComponent(item.image_id)}`;
+
+  // Overlay URL from backend (real segmentation overlays)
+  const overlayUrl = !isDemo && isSegmentation
+    ? `${API_URL}/inference/overlay/${encodeURIComponent(item.image_id)}`
+    : null;
+
+  // Draw real overlay or detection boxes on canvas
   useEffect(() => {
-    if ((tab === 'overlay' || tab === 'sidebyside') && isDetection && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+    if ((tab !== 'overlay' && tab !== 'sidebyside') || !canvasRef.current) return;
 
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-        const dets = (item as any).detections ?? [];
-        for (const det of dets) {
-          const [x1, y1, x2, y2] = det.bbox;
-          const color = OVERLAY_COLORS[det.label] || '#00ff00';
-
-          ctx.strokeStyle = color;
-          ctx.lineWidth = 3;
-          ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
-
-          ctx.fillStyle = color;
-          ctx.fillRect(x1, y1 - 20, ctx.measureText(det.label).width + 16, 20);
-          ctx.fillStyle = '#fff';
-          ctx.font = 'bold 12px Inter, sans-serif';
-          ctx.fillText(`${det.label} ${(det.confidence * 100).toFixed(0)}%`, x1 + 4, y1 - 5);
-        }
+    // For real segmentation: composite source + overlay from backend
+    if (isSegmentation && overlayUrl) {
+      const srcImg = new Image();
+      srcImg.crossOrigin = 'anonymous';
+      srcImg.onload = () => {
+        const overlayImg = new Image();
+        overlayImg.crossOrigin = 'anonymous';
+        overlayImg.onload = () => {
+          canvas.width = srcImg.width;
+          canvas.height = srcImg.height;
+          ctx.drawImage(srcImg, 0, 0);
+          ctx.globalAlpha = 0.5;
+          ctx.drawImage(overlayImg, 0, 0, srcImg.width, srcImg.height);
+          ctx.globalAlpha = 1.0;
+        };
+        overlayImg.onerror = () => {
+          // Fallback: just show source
+          canvas.width = srcImg.width;
+          canvas.height = srcImg.height;
+          ctx.drawImage(srcImg, 0, 0);
+        };
+        overlayImg.src = overlayUrl;
       };
-      img.src = imgSrc;
+      srcImg.src = imgSrc;
+      return;
     }
-  }, [tab, item, isDetection, imgSrc]);
 
-  // Draw segmentation pseudo-overlay
-  useEffect(() => {
-    if ((tab === 'overlay' || tab === 'sidebyside') && isSegmentation && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
+    // Demo segmentation: draw colored bands
+    if (isSegmentation && isDemo) {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
@@ -78,8 +86,6 @@ export default function ImageInspector({ item, modelType, onClose }: Props) {
         canvas.height = img.height;
         ctx.drawImage(img, 0, 0);
         ctx.globalAlpha = 0.35;
-
-        // Render horizontal bands representing class ratios
         const ratios = (item as any).class_ratios as Record<string, number>;
         const entries = Object.entries(ratios).sort((a, b) => b[1] - a[1]);
         let yOff = 0;
@@ -90,8 +96,6 @@ export default function ImageInspector({ item, modelType, onClose }: Props) {
           yOff += height;
         }
         ctx.globalAlpha = 1.0;
-
-        // Labels
         yOff = 0;
         ctx.font = 'bold 14px Inter, sans-serif';
         for (const [label, ratio] of entries) {
@@ -107,8 +111,34 @@ export default function ImageInspector({ item, modelType, onClose }: Props) {
         }
       };
       img.src = imgSrc;
+      return;
     }
-  }, [tab, item, isSegmentation, imgSrc]);
+
+    // Detection: draw bounding boxes
+    if (isDetection) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        const dets = (item as any).detections ?? [];
+        for (const det of dets) {
+          const [x1, y1, x2, y2] = det.bbox;
+          const color = OVERLAY_COLORS[det.label] || '#00ff00';
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 3;
+          ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+          ctx.fillStyle = color;
+          ctx.fillRect(x1, y1 - 20, ctx.measureText(det.label).width + 16, 20);
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 12px Inter, sans-serif';
+          ctx.fillText(`${det.label} ${(det.confidence * 100).toFixed(0)}%`, x1 + 4, y1 - 5);
+        }
+      };
+      img.src = imgSrc;
+    }
+  }, [tab, item, isDetection, isSegmentation, isDemo, imgSrc, overlayUrl]);
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: 'source', label: 'Source Photo' },
@@ -134,7 +164,19 @@ export default function ImageInspector({ item, modelType, onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">{item.image_id}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-gray-900">{item.image_id}</h2>
+              {!isDemo && isSegmentation && (
+                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">
+                  Real Inference
+                </span>
+              )}
+              {isDemo && (
+                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-700">
+                  Demo Data
+                </span>
+              )}
+            </div>
             <p className="text-xs text-gray-400">Image Inspector</p>
           </div>
           <div className="flex items-center gap-2">
@@ -201,7 +243,6 @@ export default function ImageInspector({ item, modelType, onClose }: Props) {
 
             {/* Details sidebar */}
             <div className="w-1/3 space-y-5">
-              {/* Breakdown chart */}
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">
                   {isSegmentation ? 'Class Breakdown' : 'Object Counts'}
@@ -209,7 +250,6 @@ export default function ImageInspector({ item, modelType, onClose }: Props) {
                 <ClassBreakdown data={breakdownData} isRatio={isSegmentation} />
               </div>
 
-              {/* Metadata */}
               <div className="pt-4 border-t border-gray-100 space-y-2">
                 <h3 className="text-sm font-semibold text-gray-900 mb-2">Metadata</h3>
                 <div className="space-y-1.5">

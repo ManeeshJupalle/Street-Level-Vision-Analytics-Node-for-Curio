@@ -41,6 +41,7 @@ export interface SegmentationResult {
   latitude?: number;
   longitude?: number;
   class_ratios: Record<string, number>;
+  demo_mode?: boolean;
 }
 
 export interface DetectionResult {
@@ -50,6 +51,7 @@ export interface DetectionResult {
   longitude?: number;
   detections: Detection[];
   object_counts: Record<string, number>;
+  demo_mode?: boolean;
 }
 
 export interface Detection {
