@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FiMap, FiFolder, FiCheck } from 'react-icons/fi';
 import { useDataSource } from '../../hooks/useDataSource';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -17,17 +17,17 @@ export default function DataSourceSelector({ value, onChange }: Props) {
   const [limit, setLimit] = useState(100);
   const [folderPath, setFolderPath] = useState('');
   const { coverage, loading: coverageLoading, error, checkCoverage } = useDataSource();
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
   // Sync config on any input change
   useEffect(() => {
     if (mode === 'mapillary') {
-      onChange({ source_type: 'mapillary', bbox, limit });
-    } else {
-      if (folderPath.trim()) {
-        onChange({ source_type: 'folder', folder_path: folderPath, limit });
-      }
+      onChangeRef.current({ source_type: 'mapillary', bbox, limit });
+    } else if (folderPath.trim()) {
+      onChangeRef.current({ source_type: 'folder', folder_path: folderPath, limit });
     }
-  }, [mode, bbox, limit, folderPath, onChange]);
+  }, [mode, bbox, limit, folderPath]);
 
   const bboxLabels = ['West', 'South', 'East', 'North'];
 

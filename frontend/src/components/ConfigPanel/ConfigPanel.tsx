@@ -28,6 +28,7 @@ interface Props {
   jobStatus: JobStatus;
   onJobStatusChange: (s: JobStatus) => void;
   onResults: (r: ResultItem[]) => void;
+  demoMode: boolean;
 }
 
 function StepHeader({
@@ -57,6 +58,7 @@ export default function ConfigPanel({
   jobStatus,
   onJobStatusChange,
   onResults,
+  demoMode,
 }: Props) {
   const { runInference } = useInference(onJobStatusChange, onResults);
 
@@ -82,7 +84,7 @@ export default function ConfigPanel({
           <div className="w-8 h-8 rounded-lg bg-indigo-500/15 flex items-center justify-center">
             <FiActivity className="text-indigo-400 text-lg" />
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="text-base font-semibold text-white leading-tight">
               Street Vision
             </h1>
@@ -90,6 +92,11 @@ export default function ConfigPanel({
               Urban image analysis pipeline
             </p>
           </div>
+          {demoMode && (
+            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              Demo
+            </span>
+          )}
         </div>
       </div>
 
