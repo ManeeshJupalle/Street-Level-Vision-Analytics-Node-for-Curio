@@ -55,16 +55,14 @@ def load_model(model_id: str, model_type: ModelType) -> str:
     if model_type == ModelType.segmentation:
         from transformers import AutoImageProcessor, AutoModelForSemanticSegmentation
 
+        token = settings.HUGGINGFACE_TOKEN or None
         processor = AutoImageProcessor.from_pretrained(
-            model_id,
-            token=settings.HUGGINGFACE_TOKEN or None,
-            cache_dir=settings.MODEL_CACHE_DIR,
+            model_id, token=token, cache_dir=settings.MODEL_CACHE_DIR,
         )
         model = AutoModelForSemanticSegmentation.from_pretrained(
-            model_id,
-            token=settings.HUGGINGFACE_TOKEN or None,
-            cache_dir=settings.MODEL_CACHE_DIR,
+            model_id, token=token, cache_dir=settings.MODEL_CACHE_DIR,
         )
+        model.eval()
         _model_cache[model_id] = (model, processor, model_type)
 
     elif model_type == ModelType.detection:
