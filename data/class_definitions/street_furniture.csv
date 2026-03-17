@@ -1,0 +1,11 @@
+class_name,class_id
+bench,0
+trash_can,1
+fire_hydrant,2
+street_light,3
+mailbox,4
+parking_meter,5
+bollard,6
+planter,7
+bike_rack,8
+bus_shelter,9
