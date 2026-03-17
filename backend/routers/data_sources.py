@@ -26,23 +26,20 @@ class FolderRequest(BaseModel):
 
 @router.post("/data/mapillary/fetch")
 async def fetch_mapillary_images(request: BBoxRequest):
-    if not settings.MAPILLARY_ACCESS_TOKEN:
-        raise HTTPException(status_code=400, detail="MAPILLARY_ACCESS_TOKEN not configured")
     try:
         images = await fetch_images_in_bbox(
             bbox=request.bbox,
             limit=request.limit,
             access_token=settings.MAPILLARY_ACCESS_TOKEN,
         )
-        return {"images": images, "count": len(images)}
+        demo = not settings.MAPILLARY_ACCESS_TOKEN
+        return {"images": images, "count": len(images), "demo_mode": demo}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/data/mapillary/image/{image_id}")
 async def get_mapillary_image(image_id: str):
-    if not settings.MAPILLARY_ACCESS_TOKEN:
-        raise HTTPException(status_code=400, detail="MAPILLARY_ACCESS_TOKEN not configured")
     try:
         local_path = await download_image(
             image_id=image_id,
@@ -56,15 +53,18 @@ async def get_mapillary_image(image_id: str):
 
 @router.post("/data/mapillary/coverage")
 async def get_mapillary_coverage(request: BBoxRequest):
-    if not settings.MAPILLARY_ACCESS_TOKEN:
-        raise HTTPException(status_code=400, detail="MAPILLARY_ACCESS_TOKEN not configured")
     try:
         images = await fetch_images_in_bbox(
             bbox=request.bbox,
-            limit=1,
+            limit=request.limit,
             access_token=settings.MAPILLARY_ACCESS_TOKEN,
         )
-        return {"bbox": request.bbox, "estimated_count": len(images)}
+        demo = not settings.MAPILLARY_ACCESS_TOKEN
+        return {
+            "bbox": request.bbox,
+            "estimated_count": len(images),
+            "demo_mode": demo,
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
