@@ -87,7 +87,7 @@ export default function ModelSelector({ selected, onSelect }: Props) {
         {error && <p className="text-xs text-rose-400 px-1">{error}</p>}
         {!loading && models.length === 0 && !error && (
           <p className="text-xs text-slate-500 text-center py-4">
-            {query.length < 2 ? 'Type to search models...' : 'No models found'}
+            {query.length < 2 ? 'Type to search models...' : `No models found for "${query}". Try a different search term.`}
           </p>
         )}
         {models.map((m) => {

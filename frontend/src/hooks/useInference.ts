@@ -7,6 +7,7 @@ interface JobStatus {
   jobId?: string;
   total: number;
   processed: number;
+  error?: string;
 }
 
 export function useInference(
@@ -56,16 +57,21 @@ export function useInference(
                 jobId,
                 total: d.total_images,
                 processed: d.processed,
+                error: d.status === 'failed' ? (d.error || 'Inference failed. Please check the backend logs.') : undefined,
               });
             }
           } catch {
             stopPolling();
-            onStatusChange({ running: false, total: 0, processed: 0 });
+            onStatusChange({ running: false, total: 0, processed: 0, error: 'Lost connection to backend during inference.' });
           }
         }, 2000);
       } catch (e: any) {
-        onStatusChange({ running: false, total: 0, processed: 0 });
-        throw e;
+        onStatusChange({
+          running: false,
+          total: 0,
+          processed: 0,
+          error: e.response?.data?.detail || e.message || 'Failed to start inference. Is the backend running?',
+        });
       }
     },
     [onStatusChange, onResults, stopPolling],

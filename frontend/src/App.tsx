@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { FiAlertTriangle } from 'react-icons/fi';
+import { FiAlertTriangle, FiWifi, FiRefreshCw } from 'react-icons/fi';
 import ConfigPanel from './components/ConfigPanel/ConfigPanel';
 import Gallery from './components/Gallery/Gallery';
 import api from './services/api';
@@ -21,12 +21,13 @@ export default function App() {
     jobId?: string;
     total: number;
     processed: number;
+    error?: string;
   }>({ running: false, total: 0, processed: 0 });
   const [filters, setFilters] = useState<FilterRule[]>([]);
   const [backendDemoMode, setBackendDemoMode] = useState(false);
   const [backendUp, setBackendUp] = useState(true);
 
-  useEffect(() => {
+  const checkBackend = useCallback(() => {
     api
       .get('/health')
       .then((res) => {
@@ -35,6 +36,10 @@ export default function App() {
       })
       .catch(() => setBackendUp(false));
   }, []);
+
+  useEffect(() => {
+    checkBackend();
+  }, [checkBackend]);
 
   const resultsAreDemo = useMemo(() => {
     if (results.length === 0) return false;
@@ -62,8 +67,14 @@ export default function App() {
 
       {!backendUp && (
         <div className="shrink-0 bg-rose-500 text-white text-xs font-semibold flex items-center justify-center gap-2 py-1.5 px-4">
-          <FiAlertTriangle className="text-sm" />
-          Backend not reachable — start with: uvicorn backend.main:app --reload
+          <FiWifi className="text-sm" />
+          Cannot connect to backend at localhost:8000
+          <button
+            onClick={checkBackend}
+            className="ml-2 underline underline-offset-2 hover:no-underline flex items-center gap-1"
+          >
+            <FiRefreshCw className="text-xs" /> Retry
+          </button>
         </div>
       )}
 

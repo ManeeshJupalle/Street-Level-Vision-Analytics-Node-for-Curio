@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { FiGrid, FiLayers, FiBarChart2, FiTrendingUp } from 'react-icons/fi';
+import { FiGrid, FiLayers, FiBarChart2, FiTrendingUp, FiSearch, FiAlertCircle, FiRefreshCw } from 'react-icons/fi';
 import GalleryItem from './GalleryItem';
 import ImageInspector from './ImageInspector';
 import FilterBar from './FilterBar';
@@ -116,7 +116,7 @@ export default function Gallery({ results, modelType, filters, onFiltersChange, 
   }, [results]);
 
   // Empty state — dashboard with placeholders
-  if (results.length === 0) {
+  if (results.length === 0 && !jobStatus?.running) {
     return (
       <div className="h-full flex flex-col overflow-hidden bg-[#f8f9fc]">
         <div className="shrink-0 px-8 pt-6 pb-4">
@@ -125,6 +125,17 @@ export default function Gallery({ results, modelType, filters, onFiltersChange, 
         </div>
 
         <div className="flex-1 overflow-y-auto px-8 pb-8">
+          {/* Inference error banner */}
+          {(jobStatus as any)?.error && (
+            <div className="mb-5 flex items-center gap-3 bg-rose-50 border border-rose-200 rounded-xl px-4 py-3">
+              <FiAlertCircle className="text-rose-500 text-lg shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-rose-700">Analysis failed</p>
+                <p className="text-xs text-rose-500 mt-0.5">{(jobStatus as any).error}</p>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-5">
             {/* Image source */}
             <DashboardCard title="Image Source Input" icon={FiGrid}>
@@ -139,10 +150,13 @@ export default function Gallery({ results, modelType, filters, onFiltersChange, 
             <DashboardCard title="Deep Analysis Preview" icon={FiLayers}>
               <CityIllustration />
               <p className="text-center text-sm text-gray-400 mt-4 leading-relaxed">
-                Analysis dashboard empty.<br />
-                Configure a model, source, and classes<br />
-                in the left panel to begin.
+                Configure and run an analysis<br />
+                to see results here.
               </p>
+              <div className="flex items-center justify-center gap-2 mt-3 text-gray-300">
+                <FiSearch className="text-sm" />
+                <span className="text-xs">Select a model, data source, and classes in the left panel</span>
+              </div>
             </DashboardCard>
 
             {/* Class prompts */}

@@ -133,6 +133,7 @@ export default function ConfigPanel({
           running={jobStatus.running}
           processed={jobStatus.processed}
           total={jobStatus.total}
+          error={(jobStatus as any).error}
           onClick={handleRun}
         />
       </div>
