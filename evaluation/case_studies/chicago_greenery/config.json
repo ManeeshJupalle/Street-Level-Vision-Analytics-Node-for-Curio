@@ -1,0 +1,25 @@
+{
+  "case_study": "Chicago Greenery Assessment",
+  "description": "Measure vegetation coverage across Lincoln Park using semantic segmentation to identify blocks with above- and below-average greenery.",
+  "model": {
+    "model_id": "nvidia/segformer-b2-finetuned-cityscapes-1024-1024",
+    "model_type": "segmentation",
+    "name": "SegFormer B2 Cityscapes",
+    "description": "Semantic segmentation model trained on Cityscapes at 1024x1024 resolution"
+  },
+  "data_source": {
+    "source_type": "mapillary",
+    "bbox": [-87.66, 41.91, -87.62, 41.94],
+    "neighborhood": "Lincoln Park",
+    "limit": 100
+  },
+  "classes": {
+    "classes": ["vegetation", "road", "building", "sidewalk", "sky"],
+    "source": "prompt"
+  },
+  "expected_outputs": {
+    "primary_metric": "vegetation pixel ratio per image",
+    "aggregation": "mean vegetation ratio per block (spatial join to 200m grid)",
+    "export_format": "GeoJSON FeatureCollection"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "case_study": "Vehicle Counting",
+  "description": "Count and classify vehicles in street-level imagery using YOLOv8 object detection to assess traffic composition across city blocks.",
+  "model": {
+    "model_id": "ultralytics/yolov8n",
+    "model_type": "detection",
+    "name": "YOLOv8 Nano",
+    "description": "Lightweight object detection model optimized for speed on CPU"
+  },
+  "data_source": {
+    "source_type": "mapillary",
+    "bbox": [-87.64, 41.875, -87.62, 41.885],
+    "neighborhood": "The Loop",
+    "limit": 50
+  },
+  "classes": {
+    "classes": ["car", "truck", "bus", "motorcycle", "bicycle"],
+    "source": "prompt"
+  },
+  "expected_outputs": {
+    "primary_metric": "object count per class per image",
+    "aggregation": "total vehicle counts per block (spatial join to 100m grid)",
+    "export_format": "GeoJSON FeatureCollection"
+  }
+}
