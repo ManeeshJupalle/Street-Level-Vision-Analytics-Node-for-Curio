@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiX, FiFlag, FiMapPin, FiClock, FiHash } from 'react-icons/fi';
 import ClassBreakdown from './ClassBreakdown';
 import type { ResultItem, ModelType } from '../../types';
@@ -7,6 +7,8 @@ interface Props {
   item: ResultItem;
   modelType: ModelType | null;
   onClose: () => void;
+  onPrev?: () => void;
+  onNext?: () => void;
 }
 
 type TabKey = 'source' | 'overlay' | 'sidebyside';
@@ -14,9 +16,19 @@ type TabKey = 'source' | 'overlay' | 'sidebyside';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 const API_BASE = API_URL.replace('/api', '');
 
-export default function ImageInspector({ item, modelType, onClose }: Props) {
+export default function ImageInspector({ item, modelType, onClose, onPrev, onNext }: Props) {
   const [tab, setTab] = useState<TabKey>('source');
   const [flagged, setFlagged] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft' && onPrev) onPrev();
+      if (e.key === 'ArrowRight' && onNext) onNext();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, onPrev, onNext]);
 
   const isDemo = (item as any).demo_mode === true;
   const isSegmentation = 'class_ratios' in item;

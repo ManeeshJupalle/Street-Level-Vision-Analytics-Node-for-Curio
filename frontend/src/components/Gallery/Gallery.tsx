@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { FiGrid, FiLayers, FiBarChart2, FiTrendingUp, FiSearch, FiAlertCircle, FiRefreshCw } from 'react-icons/fi';
 import GalleryItem from './GalleryItem';
 import ImageInspector from './ImageInspector';
@@ -78,7 +78,7 @@ function CityIllustration() {
 }
 
 export default function Gallery({ results, modelType, filters, onFiltersChange, classConfig, jobStatus }: Props) {
-  const [inspecting, setInspecting] = useState<ResultItem | null>(null);
+  const [inspectIndex, setInspectIndex] = useState<number | null>(null);
   const { applyFilters } = useFilters();
 
   const filtered = useMemo(
@@ -245,7 +245,7 @@ export default function Gallery({ results, modelType, filters, onFiltersChange, 
               key={item.image_id || i}
               item={item}
               modelType={modelType}
-              onClick={() => setInspecting(item)}
+              onClick={() => setInspectIndex(i)}
             />
           ))}
         </div>
@@ -259,11 +259,13 @@ export default function Gallery({ results, modelType, filters, onFiltersChange, 
         )}
       </div>
 
-      {inspecting && (
+      {inspectIndex !== null && filtered[inspectIndex] && (
         <ImageInspector
-          item={inspecting}
+          item={filtered[inspectIndex]}
           modelType={modelType}
-          onClose={() => setInspecting(null)}
+          onClose={() => setInspectIndex(null)}
+          onPrev={inspectIndex > 0 ? () => setInspectIndex(inspectIndex - 1) : undefined}
+          onNext={inspectIndex < filtered.length - 1 ? () => setInspectIndex(inspectIndex + 1) : undefined}
         />
       )}
     </div>
