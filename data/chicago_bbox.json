@@ -1,4 +1,17 @@
 {
-  "name": "Chicago - Lincoln Park area",
-  "bbox": [-87.66, 41.91, -87.62, 41.94]
+  "lincoln_park": {
+    "name": "Lincoln Park",
+    "bbox": [-87.66, 41.91, -87.62, 41.94],
+    "description": "Residential neighborhood with extensive green space and lakefront access"
+  },
+  "hyde_park": {
+    "name": "Hyde Park",
+    "bbox": [-87.61, 41.79, -87.58, 41.81],
+    "description": "Historic neighborhood surrounding the University of Chicago"
+  },
+  "loop": {
+    "name": "The Loop",
+    "bbox": [-87.64, 41.875, -87.62, 41.885],
+    "description": "Central business district with dense commercial and transit infrastructure"
+  }
 }
