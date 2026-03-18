@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { FiX, FiFlag, FiMapPin, FiClock, FiHash } from 'react-icons/fi';
 import ClassBreakdown from './ClassBreakdown';
 import type { ResultItem, ModelType } from '../../types';
@@ -9,136 +9,26 @@ interface Props {
   onClose: () => void;
 }
 
-const OVERLAY_COLORS: Record<string, string> = {
-  road: '#808080', sidewalk: '#c8c8c8', building: '#8b4513',
-  wall: '#a0a0a0', fence: '#b4b4b4', pole: '#ffd700',
-  'traffic light': '#ff0000', 'traffic sign': '#ffff00',
-  vegetation: '#00aa00', terrain: '#228b22', sky: '#87ceeb',
-  person: '#ff1493', rider: '#ff4500', car: '#0000ff',
-  truck: '#000080', bus: '#00bfff', train: '#8a2be2',
-  motorcycle: '#ff6347', bicycle: '#00ff7f',
-};
-
 type TabKey = 'source' | 'overlay' | 'sidebyside';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_BASE = API_URL.replace('/api', '');
 
 export default function ImageInspector({ item, modelType, onClose }: Props) {
   const [tab, setTab] = useState<TabKey>('source');
   const [flagged, setFlagged] = useState(false);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const isDemo = (item as any).demo_mode === true;
   const isSegmentation = 'class_ratios' in item;
   const isDetection = 'detections' in item;
 
-  // Build source image URL: backend-served for real results, direct URL for demo
   const imgSrc = item.image_url?.startsWith('/api')
-    ? `${API_URL.replace('/api', '')}${item.image_url}`
+    ? `${API_BASE}${item.image_url}`
     : item.image_url || `https://placehold.co/600x400/e2e8f0/94a3b8?text=${encodeURIComponent(item.image_id)}`;
 
-  // Overlay URL from backend (real segmentation overlays)
   const overlayUrl = !isDemo && isSegmentation
     ? `${API_URL}/inference/overlay/${encodeURIComponent(item.image_id)}`
     : null;
-
-  // Draw real overlay or detection boxes on canvas
-  useEffect(() => {
-    if ((tab !== 'overlay' && tab !== 'sidebyside') || !canvasRef.current) return;
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // For real segmentation: composite source + overlay from backend
-    if (isSegmentation && overlayUrl) {
-      const srcImg = new Image();
-      srcImg.crossOrigin = 'anonymous';
-      srcImg.onload = () => {
-        const overlayImg = new Image();
-        overlayImg.crossOrigin = 'anonymous';
-        overlayImg.onload = () => {
-          canvas.width = srcImg.width;
-          canvas.height = srcImg.height;
-          ctx.drawImage(srcImg, 0, 0);
-          ctx.globalAlpha = 0.5;
-          ctx.drawImage(overlayImg, 0, 0, srcImg.width, srcImg.height);
-          ctx.globalAlpha = 1.0;
-        };
-        overlayImg.onerror = () => {
-          // Fallback: just show source
-          canvas.width = srcImg.width;
-          canvas.height = srcImg.height;
-          ctx.drawImage(srcImg, 0, 0);
-        };
-        overlayImg.src = overlayUrl;
-      };
-      srcImg.src = imgSrc;
-      return;
-    }
-
-    // Demo segmentation: draw colored bands
-    if (isSegmentation && isDemo) {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
-        ctx.globalAlpha = 0.35;
-        const ratios = (item as any).class_ratios as Record<string, number>;
-        const entries = Object.entries(ratios).sort((a, b) => b[1] - a[1]);
-        let yOff = 0;
-        for (const [label, ratio] of entries) {
-          const height = ratio * img.height;
-          ctx.fillStyle = OVERLAY_COLORS[label] || '#888888';
-          ctx.fillRect(0, yOff, img.width, height);
-          yOff += height;
-        }
-        ctx.globalAlpha = 1.0;
-        yOff = 0;
-        ctx.font = 'bold 14px Inter, sans-serif';
-        for (const [label, ratio] of entries) {
-          const height = ratio * img.height;
-          if (height > 18) {
-            ctx.fillStyle = 'rgba(0,0,0,0.6)';
-            const tw = ctx.measureText(label).width;
-            ctx.fillRect(4, yOff + 4, tw + 8, 18);
-            ctx.fillStyle = '#fff';
-            ctx.fillText(label, 8, yOff + 17);
-          }
-          yOff += height;
-        }
-      };
-      img.src = imgSrc;
-      return;
-    }
-
-    // Detection: draw bounding boxes
-    if (isDetection) {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
-        const dets = (item as any).detections ?? [];
-        for (const det of dets) {
-          const [x1, y1, x2, y2] = det.bbox;
-          const color = OVERLAY_COLORS[det.label] || '#00ff00';
-          ctx.strokeStyle = color;
-          ctx.lineWidth = 3;
-          ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
-          ctx.fillStyle = color;
-          ctx.fillRect(x1, y1 - 20, ctx.measureText(det.label).width + 16, 20);
-          ctx.fillStyle = '#fff';
-          ctx.font = 'bold 12px Inter, sans-serif';
-          ctx.fillText(`${det.label} ${(det.confidence * 100).toFixed(0)}%`, x1 + 4, y1 - 5);
-        }
-      };
-      img.src = imgSrc;
-    }
-  }, [tab, item, isDetection, isSegmentation, isDemo, imgSrc, overlayUrl]);
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: 'source', label: 'Source Photo' },
@@ -151,6 +41,48 @@ export default function ImageInspector({ item, modelType, onClose }: Props) {
     : isDetection
       ? (item as any).object_counts
       : {};
+
+  const SourceImage = () => (
+    <div className="rounded-xl overflow-hidden bg-gray-100">
+      <img
+        src={imgSrc}
+        alt={item.image_id}
+        className="w-full object-contain max-h-[50vh]"
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = `https://placehold.co/600x400/e2e8f0/94a3b8?text=${encodeURIComponent(item.image_id)}`;
+        }}
+      />
+    </div>
+  );
+
+  const OverlayImage = () => (
+    <div className="rounded-xl overflow-hidden bg-gray-100 relative">
+      {/* Source image as base */}
+      <img
+        src={imgSrc}
+        alt={item.image_id}
+        className="w-full object-contain max-h-[50vh]"
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = `https://placehold.co/600x400/e2e8f0/94a3b8?text=${encodeURIComponent(item.image_id)}`;
+        }}
+      />
+      {/* Overlay on top with transparency */}
+      {overlayUrl && (
+        <img
+          src={overlayUrl}
+          alt="Segmentation overlay"
+          className="absolute inset-0 w-full h-full object-contain mix-blend-multiply opacity-60"
+        />
+      )}
+      {!overlayUrl && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+          <span className="text-white text-sm font-medium bg-black/50 px-3 py-1.5 rounded-lg">
+            {isDemo ? 'Demo mode — no real overlay' : 'Overlay not available'}
+          </span>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div
@@ -169,11 +101,6 @@ export default function ImageInspector({ item, modelType, onClose }: Props) {
               {!isDemo && isSegmentation && (
                 <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">
                   Real Inference
-                </span>
-              )}
-              {isDemo && (
-                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-700">
-                  Demo Data
                 </span>
               )}
             </div>
@@ -208,7 +135,7 @@ export default function ImageInspector({ item, modelType, onClose }: Props) {
               onClick={() => setTab(t.key)}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
                 tab === t.key
-                  ? 'border-indigo-500 text-indigo-600'
+                  ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -221,23 +148,14 @@ export default function ImageInspector({ item, modelType, onClose }: Props) {
         <div className="flex-1 overflow-y-auto p-6">
           <div className="flex gap-6">
             {/* Image area */}
-            <div className={`${tab === 'sidebyside' ? 'w-2/3 grid grid-cols-2 gap-3' : 'w-2/3'}`}>
-              {(tab === 'source' || tab === 'sidebyside') && (
-                <div className="rounded-xl overflow-hidden bg-gray-100">
-                  <img
-                    src={imgSrc}
-                    alt={item.image_id}
-                    className="w-full object-contain max-h-[50vh]"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = `https://placehold.co/600x400/e2e8f0/94a3b8?text=${encodeURIComponent(item.image_id)}`;
-                    }}
-                  />
-                </div>
-              )}
-              {(tab === 'overlay' || tab === 'sidebyside') && (
-                <div className="rounded-xl overflow-hidden bg-gray-100">
-                  <canvas ref={canvasRef} className="w-full object-contain max-h-[50vh]" />
-                </div>
+            <div className={tab === 'sidebyside' ? 'w-2/3 grid grid-cols-2 gap-3' : 'w-2/3'}>
+              {tab === 'source' && <SourceImage />}
+              {tab === 'overlay' && <OverlayImage />}
+              {tab === 'sidebyside' && (
+                <>
+                  <SourceImage />
+                  <OverlayImage />
+                </>
               )}
             </div>
 

@@ -14,7 +14,7 @@ function getPrimaryMetric(item: ResultItem): { label: string; value: string; lev
     const [label, ratio] = entries[0];
     const pct = Math.round(ratio * 100);
     return {
-      label: label.slice(0, 8),
+      label: label.slice(0, 10),
       value: `${pct}%`,
       level: pct > 40 ? 'high' : pct > 15 ? 'mid' : 'low',
     };
@@ -25,7 +25,7 @@ function getPrimaryMetric(item: ResultItem): { label: string; value: string; lev
     entries.sort((a, b) => b[1] - a[1]);
     const [label, count] = entries[0];
     return {
-      label: label.slice(0, 8),
+      label: label.slice(0, 10),
       value: String(count),
       level: count > 5 ? 'high' : count > 2 ? 'mid' : 'low',
     };
@@ -34,15 +34,15 @@ function getPrimaryMetric(item: ResultItem): { label: string; value: string; lev
 }
 
 const borderColors = {
-  high: 'border-emerald-400 shadow-emerald-100',
-  mid: 'border-amber-400 shadow-amber-100',
+  high: 'border-emerald-300',
+  mid: 'border-amber-300',
   low: 'border-gray-200',
 };
 
 const badgeBgs = {
-  high: 'bg-emerald-500',
-  mid: 'bg-amber-500',
-  low: 'bg-gray-500',
+  high: 'bg-emerald-500/90 backdrop-blur-sm',
+  mid: 'bg-amber-500/90 backdrop-blur-sm',
+  low: 'bg-gray-500/80 backdrop-blur-sm',
 };
 
 const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').replace('/api', '');
@@ -57,14 +57,13 @@ export default function GalleryItem({ item, onClick }: Props) {
   return (
     <button
       onClick={onClick}
-      className={`group relative bg-white rounded-xl border-2 overflow-hidden shadow-sm hover:shadow-md transition-all text-left ${borderColors[metric.level]}`}
+      className={`group relative bg-white rounded-2xl border overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-200 text-left hover:-translate-y-0.5 ${borderColors[metric.level]}`}
     >
-      {/* Thumbnail */}
       <div className="aspect-[4/3] bg-gray-100 overflow-hidden">
         <img
           src={imgSrc}
           alt={item.image_id}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
           loading="lazy"
           onError={(e) => {
             (e.target as HTMLImageElement).src = `https://placehold.co/300x200/e2e8f0/94a3b8?text=${encodeURIComponent(item.image_id)}`;
@@ -72,18 +71,16 @@ export default function GalleryItem({ item, onClick }: Props) {
         />
       </div>
 
-      {/* Metric badge */}
       <div
-        className={`absolute top-2 right-2 px-2 py-0.5 rounded-md text-white text-[11px] font-semibold shadow ${badgeBgs[metric.level]}`}
+        className={`absolute top-2.5 right-2.5 px-2.5 py-1 rounded-lg text-white text-[11px] font-semibold shadow-lg ${badgeBgs[metric.level]}`}
       >
         {metric.label}: {metric.value}
       </div>
 
-      {/* Footer */}
-      <div className="px-3 py-2">
-        <p className="text-xs font-medium text-gray-800 truncate">{item.image_id}</p>
+      <div className="px-3.5 py-2.5">
+        <p className="text-xs font-semibold text-gray-800 truncate">{item.image_id}</p>
         {item.latitude != null && item.longitude != null && (
-          <p className="text-[10px] text-gray-400 mt-0.5">
+          <p className="text-[10px] text-gray-400 mt-0.5 tabular-nums">
             {item.latitude.toFixed(4)}, {item.longitude.toFixed(4)}
           </p>
         )}
