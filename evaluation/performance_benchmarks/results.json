@@ -1,0 +1,40 @@
+{
+  "benchmark": "Street Vision Pipeline Latency",
+  "description": "Measures demo mode inference latency at different image counts",
+  "image_counts_tested": [
+    10,
+    50,
+    100,
+    500
+  ],
+  "results": [
+    {
+      "image_count_requested": 10,
+      "image_count_processed": 10,
+      "total_pipeline_time_sec": 3.012,
+      "avg_inference_time_per_image_sec": 0.3012,
+      "throughput_images_per_sec": 3.32
+    },
+    {
+      "image_count_requested": 50,
+      "image_count_processed": 20,
+      "total_pipeline_time_sec": 6.024,
+      "avg_inference_time_per_image_sec": 0.3012,
+      "throughput_images_per_sec": 3.32
+    },
+    {
+      "image_count_requested": 100,
+      "image_count_processed": 20,
+      "total_pipeline_time_sec": 6.026,
+      "avg_inference_time_per_image_sec": 0.3013,
+      "throughput_images_per_sec": 3.32
+    },
+    {
+      "image_count_requested": 500,
+      "image_count_processed": 20,
+      "total_pipeline_time_sec": 6.024,
+      "avg_inference_time_per_image_sec": 0.3012,
+      "throughput_images_per_sec": 3.32
+    }
+  ]
+}
