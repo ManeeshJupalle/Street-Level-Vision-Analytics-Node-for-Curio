@@ -60,6 +60,8 @@ Results are displayed in an interactive gallery with filtering, inspection, erro
 - **Error flagging** — Flag incorrect CV outputs for exclusion from aggregation
 - **Spatial aggregation** — Attach per-image CV results to block-level geometry via GeoPandas spatial join
 - **Demo mode** — Fully functional without API keys using simulated data, with a prominent banner indicating mock data is in use
+- **Curio integration** — Registered as a proper Curio node (BoxDescriptor + lifecycle hook), appears in the node palette, outputs GeoJSON through Curio's dataflow graph to downstream visualization nodes
+- **Consistent color system** — Shared class-to-color palette (road=blue, building=green, vegetation=amber, etc.) across overlay masks, breakdown charts, and UI chips
 
 ---
 
@@ -69,8 +71,9 @@ Results are displayed in an interactive gallery with filtering, inspection, erro
 |-----------|-----------|
 | Backend | Python, FastAPI, Uvicorn |
 | CV inference | HuggingFace Transformers, SegFormer, Ultralytics YOLOv8 |
-| Image data | Mapillary API v4, picsum.photos (sample images) |
+| Image data | Mapillary API v4 (real street-level imagery) |
 | Frontend | React 18, TypeScript, Vite, Tailwind CSS |
+| Curio integration | React Flow v11, Webpack, custom BoxDescriptor + lifecycle hook |
 | Spatial ops | GeoPandas, Shapely |
 | Data format | GeoJSON, JSON, CSV |
 
@@ -87,15 +90,21 @@ street-vision-node/
 │   ├── services/         # Business logic (HF, Mapillary, inference, spatial, cache)
 │   ├── models/           # Pydantic schemas
 │   └── utils/            # Image and geo helpers
-├── frontend/             # React + TypeScript UI (Vite)
+├── frontend/             # Standalone React + TypeScript UI (Vite)
 │   └── src/
 │       ├── components/   # ConfigPanel, Gallery, common components
+│       ├── constants/    # Shared class color palette
 │       ├── hooks/        # Custom React hooks (useModels, useInference, etc.)
 │       ├── services/     # Axios API client
 │       └── types/        # TypeScript interfaces
+├── curio-integration/    # Files added to the Curio repo for node registration
+│   ├── constants.ts      # BoxType.STREET_VISION enum addition
+│   ├── streetVisionLifecycle.tsx  # Node lifecycle hook
+│   ├── descriptors.ts    # registerNode() call
+│   └── index.ts          # Export addition
 ├── scripts/              # Utility scripts (download sample images)
 ├── data/                 # Sample images + class definitions
-│   ├── sample_images/    # 15 pre-downloaded street-level images
+│   ├── sample_images/    # 20 real Mapillary street-level images
 │   ├── chicago_bbox.json # Chicago Lincoln Park bounding box
 │   └── class_definitions/# Cityscapes 19-class, street furniture CSVs
 ├── evaluation/           # Case studies + task inventory
@@ -145,7 +154,7 @@ Open `http://localhost:5173` in your browser.
 python scripts/download_samples.py
 ```
 
-This downloads 15 street-level images to `data/sample_images/` for running real inference without a Mapillary token.
+This downloads 20 real Mapillary street-level images to `data/sample_images/` from neighborhoods in NYC, Chicago, SF, Paris, and London.
 
 ---
 
@@ -177,6 +186,37 @@ This downloads 15 street-level images to `data/sample_images/` for running real 
 | `/api/inference/status/{id}` | GET | Check job progress |
 | `/api/inference/results/{id}` | GET | Get job results |
 | `/api/inference/overlay/{id}` | GET | Get segmentation overlay PNG |
+| `/api/inference/results/{id}/geojson` | GET | Get results as GeoJSON FeatureCollection |
+| `/api/inference/latest` | GET | Get most recent job status |
+
+---
+
+## Curio Integration
+
+The node integrates into Curio following its exact descriptor + adapter + lifecycle hook pattern:
+
+1. **`BoxType.STREET_VISION`** added to `constants.ts`
+2. **`streetVisionLifecycle.tsx`** — React hook rendering a compact control panel inside the Curio canvas with backend status, a "Configure & Run" button (opens standalone app), job progress tracking, and a "Fetch Results as GeoJSON" button that pushes data through `data.outputCallback()`
+3. **`registerNode()`** call in `descriptors.ts` with GEODATAFRAME/JSON ports, `faStreetView` icon, computation category
+4. Output is a standard GeoJSON FeatureCollection that flows to downstream Curio map/chart/table nodes
+
+### Running with Curio
+
+```bash
+# Terminal 1 — Curio Flask backend (requires Python 3.10-3.11)
+cd curio && .venv311/Scripts/python -c "from utk_curio.backend.app import create_app; app=create_app(); app.run(host='localhost',port=5002)"
+
+# Terminal 2 — Street Vision backend
+cd street-vision-node && .venv/Scripts/uvicorn backend.main:app --reload --port 8000
+
+# Terminal 3 — Standalone frontend
+cd street-vision-node/frontend && npm run dev
+
+# Terminal 4 — Curio frontend
+cd curio/utk_curio/frontend/urban-workflows && npx webpack serve --mode development --port 3000
+```
+
+Open `http://localhost:3000` → drag "Street Vision" from palette → Configure & Run → Fetch Results as GeoJSON.
 
 ---
 
