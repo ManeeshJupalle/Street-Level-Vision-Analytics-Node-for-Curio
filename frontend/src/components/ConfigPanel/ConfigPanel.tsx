@@ -1,4 +1,5 @@
-import { FiZap } from 'react-icons/fi';
+import { useState } from 'react';
+import { FiZap, FiInfo, FiX } from 'react-icons/fi';
 import ModelSelector from './ModelSelector';
 import DataSourceSelector from './DataSourceSelector';
 import ClassSelector from './ClassSelector';
@@ -61,6 +62,7 @@ export default function ConfigPanel({
   onJobStatusChange,
   onResults,
 }: Props) {
+  const [showAbout, setShowAbout] = useState(false);
   const { runInference } = useInference(onJobStatusChange, onResults);
 
   const modelDone = !!selectedModel;
@@ -85,7 +87,7 @@ export default function ConfigPanel({
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-blue-400 flex items-center justify-center shadow-lg shadow-accent/20">
             <FiZap className="text-white text-base" />
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-[15px] font-semibold text-white leading-tight tracking-tight">
               Street Vision
             </h1>
@@ -93,7 +95,30 @@ export default function ConfigPanel({
               Urban image analysis pipeline
             </p>
           </div>
+          <button
+            onClick={() => setShowAbout(!showAbout)}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-300 hover:bg-white/[0.06] transition-colors"
+            title="About this tool"
+          >
+            <FiInfo className="text-sm" />
+          </button>
         </div>
+        {showAbout && (
+          <div className="mt-3 px-3.5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] relative">
+            <button
+              onClick={() => setShowAbout(false)}
+              className="absolute top-2 right-2 text-slate-500 hover:text-slate-300 transition-colors"
+            >
+              <FiX className="text-xs" />
+            </button>
+            <p className="text-xs text-slate-400 leading-relaxed pr-4">
+              This tool lets urban planners configure computer vision models to analyze street-level
+              imagery without technical expertise. Select a model from HuggingFace, choose a data
+              source, specify target classes, and explore results in an interactive gallery. Outputs
+              flow as GeoJSON to downstream Curio visualization nodes.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Steps */}
