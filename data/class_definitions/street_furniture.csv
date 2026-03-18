@@ -1,11 +1,11 @@
-class_name,class_id
-bench,0
-trash_can,1
-fire_hydrant,2
-street_light,3
-mailbox,4
-parking_meter,5
-bollard,6
-planter,7
-bike_rack,8
-bus_shelter,9
+class_name,class_id,description
+bench,0,Public seating — parks and sidewalks
+streetlight,1,Street and pedestrian lighting poles
+fire_hydrant,2,Fire hydrants on sidewalks and curbs
+trash_can,3,Public waste and recycling receptacles
+bicycle_rack,4,Bicycle parking infrastructure
+parking_meter,5,Metered parking payment stations
+mailbox,6,Public postal collection boxes
+bus_stop,7,Bus stop signs and shelters
+traffic_light,8,Intersection traffic signal poles
+crosswalk,9,Marked pedestrian crossings

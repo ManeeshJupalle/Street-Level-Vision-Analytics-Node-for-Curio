@@ -1,20 +1,20 @@
-class_name,class_id
-road,0
-sidewalk,1
-building,2
-wall,3
-fence,4
-pole,5
-traffic light,6
-traffic sign,7
-vegetation,8
-terrain,9
-sky,10
-person,11
-rider,12
-car,13
-truck,14
-bus,15
-train,16
-motorcycle,17
-bicycle,18
+class_name,class_id,color_hex
+road,0,#4A90D9
+sidewalk,1,#E74C8B
+building,2,#2ECC71
+wall,3,#6C7A89
+fence,4,#BF8C3E
+pole,5,#9B59B6
+traffic light,6,#F5D76E
+traffic sign,7,#D4AC0D
+vegetation,8,#27AE60
+terrain,9,#7DCEA0
+sky,10,#5DADE2
+person,11,#E74C3C
+rider,12,#C0392B
+car,13,#3498DB
+truck,14,#1ABC9C
+bus,15,#F39C12
+train,16,#8E44AD
+motorcycle,17,#D35400
+bicycle,18,#E67E22

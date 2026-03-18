@@ -1,0 +1,6 @@
+class_name,class_id,description
+tree,0,Individual trees — street trees and park trees
+grass,1,Grass lawns and ground cover
+bush,2,Shrubs and hedge rows
+flower_bed,3,Maintained flower beds and garden plots
+planter,4,Container planters on sidewalks and plazas
