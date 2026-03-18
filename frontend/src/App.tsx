@@ -26,7 +26,6 @@ export default function App() {
   const [backendDemoMode, setBackendDemoMode] = useState(false);
   const [backendUp, setBackendUp] = useState(true);
 
-  // Check backend health on mount
   useEffect(() => {
     api
       .get('/health')
@@ -37,13 +36,11 @@ export default function App() {
       .catch(() => setBackendUp(false));
   }, []);
 
-  // Determine if current results are real or demo
   const resultsAreDemo = useMemo(() => {
     if (results.length === 0) return false;
     return results.some((r: any) => r.demo_mode === true);
   }, [results]);
 
-  // Show demo banner only when backend is in demo mode AND results are demo (or no results yet)
   const showDemoBanner = backendDemoMode && (results.length === 0 || resultsAreDemo);
 
   const handleDataSourceChange = useCallback((d: DataSourceConfig) => {
@@ -55,24 +52,24 @@ export default function App() {
   }, []);
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
-      {/* Demo mode banner */}
+    <div className="h-screen flex flex-col overflow-hidden bg-[#f8f9fc]">
       {showDemoBanner && (
         <div className="shrink-0 bg-amber-500 text-amber-950 text-xs font-semibold flex items-center justify-center gap-2 py-1.5 px-4">
           <FiAlertTriangle className="text-sm" />
-          DEMO MODE — Using simulated data. Select "Sample Images" data source to run real SegFormer inference.
+          DEMO MODE — Select "Sample Images" to run real SegFormer inference.
         </div>
       )}
 
       {!backendUp && (
         <div className="shrink-0 bg-rose-500 text-white text-xs font-semibold flex items-center justify-center gap-2 py-1.5 px-4">
           <FiAlertTriangle className="text-sm" />
-          Backend not reachable at {import.meta.env.VITE_API_URL || 'http://localhost:8000/api'} — start it with: uvicorn backend.main:app --reload
+          Backend not reachable — start with: uvicorn backend.main:app --reload
         </div>
       )}
 
       <div className="flex flex-1 min-h-0">
-        <div className="w-[40%] min-w-[380px] max-w-[520px] shrink-0">
+        {/* Sidebar */}
+        <div className="w-[380px] min-w-[360px] max-w-[420px] shrink-0">
           <ConfigPanel
             selectedModel={selectedModel}
             onModelSelect={setSelectedModel}
@@ -86,12 +83,16 @@ export default function App() {
             demoMode={showDemoBanner}
           />
         </div>
+
+        {/* Dashboard */}
         <div className="flex-1 min-w-0">
           <Gallery
             results={results}
             modelType={selectedModel?.model_type ?? null}
             filters={filters}
             onFiltersChange={setFilters}
+            classConfig={classConfig}
+            jobStatus={jobStatus}
           />
         </div>
       </div>

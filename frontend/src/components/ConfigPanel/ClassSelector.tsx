@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { FiX, FiUpload } from 'react-icons/fi';
+import { getClassDotColor } from '../../constants/classColors';
 import type { ClassConfig } from '../../types';
 
 interface Props {
@@ -9,7 +10,7 @@ interface Props {
 
 const CITYSCAPES_SUGGESTIONS = [
   'vegetation', 'sidewalk', 'road', 'building', 'sky',
-  'car', 'person', 'terrain', 'pole', 'fence',
+  'car', 'terrain', 'pole', 'fence',
   'truck', 'bus', 'bicycle', 'wall', 'traffic sign',
 ];
 
@@ -63,8 +64,8 @@ export default function ClassSelector({ value, onChange }: Props) {
 
   return (
     <div>
-      {/* Mode toggle */}
-      <div className="flex gap-1 mb-3">
+      {/* Pill toggle */}
+      <div className="pill-toggle mb-3">
         {[
           { value: 'prompt' as const, label: 'Text Prompt' },
           { value: 'csv' as const, label: 'Upload CSV' },
@@ -72,11 +73,7 @@ export default function ClassSelector({ value, onChange }: Props) {
           <button
             key={opt.value}
             onClick={() => setMode(opt.value)}
-            className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-colors ${
-              mode === opt.value
-                ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
-                : 'text-slate-400 hover:text-slate-300 border border-transparent hover:bg-slate-700/50'
-            }`}
+            className={mode === opt.value ? 'active' : ''}
           >
             {opt.label}
           </button>
@@ -85,24 +82,20 @@ export default function ClassSelector({ value, onChange }: Props) {
 
       {mode === 'prompt' ? (
         <>
-          {/* Text input */}
           <div className="flex gap-2 mb-3">
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  addFromText();
-                }
+                if (e.key === 'Enter') { e.preventDefault(); addFromText(); }
               }}
               placeholder="vegetation, sidewalk, building..."
               rows={2}
-              className="flex-1 bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500/50 resize-none transition-colors"
+              className="flex-1 bg-navy-700/60 border border-white/[0.06] rounded-xl px-3 py-2.5 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-accent/40 resize-none transition-all"
             />
             <button
               onClick={addFromText}
-              className="self-end px-3 py-2 text-xs font-medium bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-md transition-colors"
+              className="self-end px-3.5 py-2.5 text-xs font-semibold bg-navy-600 hover:bg-navy-500 text-slate-300 rounded-xl transition-colors"
             >
               Add
             </button>
@@ -112,16 +105,18 @@ export default function ClassSelector({ value, onChange }: Props) {
           <div className="flex flex-wrap gap-1.5 mb-3">
             {CITYSCAPES_SUGGESTIONS.map((cls) => {
               const isActive = selected.includes(cls);
+              const dotColor = getClassDotColor(cls);
               return (
                 <button
                   key={cls}
                   onClick={() => toggleChip(cls)}
-                  className={`text-[11px] px-2 py-1 rounded-full border transition-all ${
+                  className={`inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full border transition-all duration-200 ${
                     isActive
-                      ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300'
-                      : 'border-slate-700 text-slate-500 hover:text-slate-400 hover:border-slate-600'
+                      ? 'bg-accent/15 border-accent/30 text-accent-light'
+                      : 'border-white/[0.06] text-slate-500 hover:text-slate-400 hover:border-white/[0.12]'
                   }`}
                 >
+                  <span className={`w-2 h-2 rounded-full ${dotColor}`} />
                   {cls}
                 </button>
               );
@@ -130,16 +125,10 @@ export default function ClassSelector({ value, onChange }: Props) {
         </>
       ) : (
         <div className="mb-3">
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".csv"
-            onChange={handleCsv}
-            className="hidden"
-          />
+          <input ref={fileRef} type="file" accept=".csv" onChange={handleCsv} className="hidden" />
           <button
             onClick={() => fileRef.current?.click()}
-            className="w-full flex items-center justify-center gap-2 py-6 border-2 border-dashed border-slate-700 rounded-lg text-sm text-slate-400 hover:border-slate-500 hover:text-slate-300 transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-7 border-2 border-dashed border-white/[0.08] rounded-xl text-sm text-slate-400 hover:border-white/[0.15] hover:text-slate-300 transition-all"
           >
             <FiUpload />
             Choose CSV file
@@ -147,27 +136,31 @@ export default function ClassSelector({ value, onChange }: Props) {
         </div>
       )}
 
-      {/* Selected tags */}
+      {/* Selected tags with colored dots */}
       {selected.length > 0 && (
         <div>
-          <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">
+          <p className="text-[10px] text-slate-500 uppercase tracking-wider font-medium mb-1.5">
             Selected ({selected.length})
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {selected.map((cls) => (
-              <span
-                key={cls}
-                className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/20"
-              >
-                {cls}
-                <button
-                  onClick={() => removeTag(cls)}
-                  className="hover:text-white transition-colors"
+            {selected.map((cls) => {
+              const dotColor = getClassDotColor(cls);
+              return (
+                <span
+                  key={cls}
+                  className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full bg-accent/10 text-accent-light border border-accent/15"
                 >
-                  <FiX className="text-[10px]" />
-                </button>
-              </span>
-            ))}
+                  <span className={`w-2 h-2 rounded-full ${dotColor}`} />
+                  {cls}
+                  <button
+                    onClick={() => removeTag(cls)}
+                    className="hover:text-white transition-colors ml-0.5"
+                  >
+                    <FiX className="text-[10px]" />
+                  </button>
+                </span>
+              );
+            })}
           </div>
         </div>
       )}

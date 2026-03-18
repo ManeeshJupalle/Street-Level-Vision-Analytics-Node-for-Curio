@@ -1,4 +1,4 @@
-import { FiActivity } from 'react-icons/fi';
+import { FiZap } from 'react-icons/fi';
 import ModelSelector from './ModelSelector';
 import DataSourceSelector from './DataSourceSelector';
 import ClassSelector from './ClassSelector';
@@ -41,9 +41,11 @@ function StepHeader({
   state: 'pending' | 'active' | 'done';
 }) {
   return (
-    <div className="step-header">
-      <span className={`step-num ${state}`}>{num}</span>
-      {label}
+    <div className="step-label">
+      <span className={`step-circle ${state}`}>{num}</span>
+      <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+        {label}
+      </span>
     </div>
   );
 }
@@ -58,7 +60,6 @@ export default function ConfigPanel({
   jobStatus,
   onJobStatusChange,
   onResults,
-  demoMode,
 }: Props) {
   const { runInference } = useInference(onJobStatusChange, onResults);
 
@@ -77,32 +78,26 @@ export default function ConfigPanel({
   };
 
   return (
-    <div className="dark-panel h-full bg-slate-900 border-r border-slate-800 flex flex-col overflow-hidden">
+    <div className="h-full bg-gradient-to-b from-navy-900 to-navy-800 border-r border-white/[0.06] flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="shrink-0 px-5 pt-5 pb-4 border-b border-slate-800">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-indigo-500/15 flex items-center justify-center">
-            <FiActivity className="text-indigo-400 text-lg" />
+      <div className="shrink-0 px-5 pt-5 pb-4 border-b border-white/[0.06]">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-blue-400 flex items-center justify-center shadow-lg shadow-accent/20">
+            <FiZap className="text-white text-base" />
           </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-base font-semibold text-white leading-tight">
+          <div>
+            <h1 className="text-[15px] font-semibold text-white leading-tight tracking-tight">
               Street Vision
             </h1>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-slate-500 font-medium">
               Urban image analysis pipeline
             </p>
           </div>
-          {demoMode && (
-            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
-              Demo
-            </span>
-          )}
         </div>
       </div>
 
       {/* Steps */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
-        {/* Step 1 */}
+      <div className="flex-1 overflow-y-auto sidebar-scroll px-5 py-5 space-y-6">
         <section>
           <StepHeader
             num={1}
@@ -112,7 +107,6 @@ export default function ConfigPanel({
           <ModelSelector selected={selectedModel} onSelect={onModelSelect} />
         </section>
 
-        {/* Step 2 */}
         <section>
           <StepHeader
             num={2}
@@ -122,7 +116,6 @@ export default function ConfigPanel({
           <DataSourceSelector value={dataSource} onChange={onDataSourceChange} />
         </section>
 
-        {/* Step 3 */}
         <section>
           <StepHeader
             num={3}
@@ -134,7 +127,7 @@ export default function ConfigPanel({
       </div>
 
       {/* Run */}
-      <div className="shrink-0 px-5 py-4 border-t border-slate-800">
+      <div className="shrink-0 px-5 py-4 border-t border-white/[0.06]">
         <RunButton
           ready={allReady}
           running={jobStatus.running}

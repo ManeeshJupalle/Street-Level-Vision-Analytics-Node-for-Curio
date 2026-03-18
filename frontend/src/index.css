@@ -8,24 +8,50 @@
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply bg-[#f8f9fc] text-gray-900 antialiased;
   }
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { @apply bg-transparent; }
-  ::-webkit-scrollbar-thumb { @apply bg-gray-300 rounded-full; }
+  ::-webkit-scrollbar-thumb { @apply bg-gray-200 rounded-full hover:bg-gray-300; }
 }
 
 @layer components {
-  .dark-panel ::-webkit-scrollbar-thumb {
-    @apply bg-slate-600 rounded-full;
+  .sidebar-scroll::-webkit-scrollbar-thumb {
+    @apply bg-navy-500/60 rounded-full;
   }
-  .step-header {
-    @apply flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3 select-none;
+
+  /* Pill toggle shared style */
+  .pill-toggle {
+    @apply flex p-0.5 rounded-xl bg-navy-800/80 border border-white/[0.04];
   }
-  .step-num {
-    @apply w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-bold shrink-0;
+  .pill-toggle button {
+    @apply flex-1 text-xs font-medium py-1.5 px-3 rounded-[10px] transition-all duration-200 ease-out;
   }
-  .step-num.pending { @apply bg-slate-700 text-slate-400; }
-  .step-num.active  { @apply bg-indigo-500 text-white; }
-  .step-num.done    { @apply bg-emerald-500 text-white; }
+  .pill-toggle button.active {
+    @apply bg-accent text-white shadow-md shadow-accent/20;
+  }
+  .pill-toggle button:not(.active) {
+    @apply text-slate-400 hover:text-slate-300;
+  }
+
+  /* Step header */
+  .step-label {
+    @apply flex items-center gap-2.5 mb-3 select-none;
+  }
+  .step-circle {
+    @apply w-6 h-6 rounded-full text-[11px] font-bold flex items-center justify-center shrink-0 transition-colors duration-200;
+  }
+  .step-circle.pending { @apply bg-navy-600 text-slate-500 border border-white/[0.06]; }
+  .step-circle.active  { @apply bg-accent text-white shadow-md shadow-accent/25; }
+  .step-circle.done    { @apply bg-emerald-500 text-white shadow-md shadow-emerald-500/25; }
+
+  /* Skeleton animation */
+  .skeleton {
+    @apply bg-gray-200 rounded animate-pulse;
+  }
+
+  /* Glass card for sidebar */
+  .glass-card {
+    @apply bg-white/[0.03] border border-white/[0.06] rounded-xl backdrop-blur-sm;
+  }
 }

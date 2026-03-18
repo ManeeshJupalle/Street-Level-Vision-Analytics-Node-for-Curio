@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { FiSearch, FiDownload, FiCheck } from 'react-icons/fi';
 import { useModels } from '../../hooks/useModels';
 import LoadingSpinner from '../common/LoadingSpinner';
-import Badge from '../common/Badge';
 import type { ModelInfo, ModelType, ModelSearchResult } from '../../types';
 
 interface Props {
@@ -41,25 +40,24 @@ export default function ModelSelector({ selected, onSelect }: Props) {
 
   return (
     <div>
+      {/* Selected model card */}
       {selected && (
-        <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-500/10 border border-indigo-500/30">
-          <FiCheck className="text-indigo-400 shrink-0" />
-          <span className="text-sm text-slate-200 truncate">{selected.name}</span>
-          <Badge color="indigo">{selected.model_type}</Badge>
+        <div className="mb-3 flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-accent/10 border border-accent/25 shadow-glow">
+          <FiCheck className="text-accent-light shrink-0" />
+          <span className="text-sm text-slate-200 truncate font-medium">{selected.name}</span>
+          <span className="ml-auto shrink-0 text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-accent/20 text-accent-light">
+            {selected.model_type}
+          </span>
         </div>
       )}
 
-      {/* Task tabs */}
-      <div className="flex gap-1 mb-3">
+      {/* Task pill toggle */}
+      <div className="pill-toggle mb-3">
         {TASKS.map((t) => (
           <button
             key={t.value}
             onClick={() => setTask(t.value)}
-            className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-colors ${
-              task === t.value
-                ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
-                : 'text-slate-400 hover:text-slate-300 border border-transparent hover:bg-slate-700/50'
-            }`}
+            className={task === t.value ? 'active' : ''}
           >
             {t.label}
           </button>
@@ -74,7 +72,7 @@ export default function ModelSelector({ selected, onSelect }: Props) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search models..."
-          className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-colors"
+          className="w-full bg-navy-700/60 border border-white/[0.06] rounded-xl pl-9 pr-3 py-2.5 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/15 transition-all"
         />
         {loading && (
           <LoadingSpinner
@@ -84,9 +82,9 @@ export default function ModelSelector({ selected, onSelect }: Props) {
         )}
       </div>
 
-      {/* Results */}
-      <div className="space-y-1.5 max-h-[240px] overflow-y-auto pr-1">
-        {error && <p className="text-xs text-rose-400">{error}</p>}
+      {/* Model list */}
+      <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-0.5 sidebar-scroll">
+        {error && <p className="text-xs text-rose-400 px-1">{error}</p>}
         {!loading && models.length === 0 && !error && (
           <p className="text-xs text-slate-500 text-center py-4">
             {query.length < 2 ? 'Type to search models...' : 'No models found'}
@@ -94,26 +92,29 @@ export default function ModelSelector({ selected, onSelect }: Props) {
         )}
         {models.map((m) => {
           const isSelected = selected?.model_id === m.model_id;
+          const org = m.model_id.includes('/') ? m.model_id.split('/')[0] : '';
           return (
             <button
               key={m.model_id}
               onClick={() => handleSelect(m)}
-              className={`w-full text-left px-3 py-2.5 rounded-lg border transition-all ${
+              className={`w-full text-left px-3 py-2.5 rounded-xl border transition-all duration-200 ${
                 isSelected
-                  ? 'border-indigo-500/50 bg-indigo-500/10'
-                  : 'border-slate-700/50 bg-slate-800/50 hover:bg-slate-800 hover:border-slate-600'
+                  ? 'border-accent/40 bg-accent/8 shadow-glow'
+                  : 'border-white/[0.04] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.08] hover:shadow-sm'
               }`}
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="text-sm text-slate-200 truncate font-medium">
+                <span className="text-[13px] text-slate-200 truncate font-medium">
                   {m.name}
                 </span>
-                <div className="flex items-center gap-1 text-slate-500 shrink-0">
+                <div className="flex items-center gap-1.5 text-slate-500 shrink-0">
                   <FiDownload className="text-[10px]" />
-                  <span className="text-[11px]">{fmtDownloads(m.downloads)}</span>
+                  <span className="text-[11px] tabular-nums">{fmtDownloads(m.downloads)}</span>
                 </div>
               </div>
-              <p className="text-[11px] text-slate-500 truncate mt-0.5">{m.model_id}</p>
+              {org && (
+                <p className="text-[11px] text-slate-500 truncate mt-0.5">{org}</p>
+              )}
             </button>
           );
         })}
