@@ -7,7 +7,7 @@ router = APIRouter()
 
 @router.get("/health")
 async def health_check():
-    demo_mode = not settings.MAPILLARY_ACCESS_TOKEN or not settings.HUGGINGFACE_TOKEN
+    demo_mode = not settings.MAPILLARY_ACCESS_TOKEN
     return {
         "status": "healthy",
         "version": "0.1.0",

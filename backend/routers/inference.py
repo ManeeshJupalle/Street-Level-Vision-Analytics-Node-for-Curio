@@ -79,3 +79,61 @@ async def get_overlay_image(image_id: str):
     if not path:
         raise HTTPException(status_code=404, detail="Overlay not found")
     return FileResponse(path, media_type="image/png")
+
+
+@router.get("/inference/results/{job_id}/geojson")
+async def get_inference_geojson(job_id: str):
+    """Return inference results as a GeoJSON FeatureCollection."""
+    if job_id not in jobs:
+        raise HTTPException(status_code=404, detail="Job not found")
+    job = jobs[job_id]
+    features = []
+    for r in job.get("results", []):
+        lat = r.get("latitude")
+        lon = r.get("longitude")
+        geometry = (
+            {"type": "Point", "coordinates": [lon, lat]}
+            if lat is not None and lon is not None
+            else None
+        )
+        props = {
+            "image_id": r.get("image_id", ""),
+            "image_url": r.get("image_url", ""),
+        }
+        if "class_ratios" in r:
+            props["class_ratios"] = r["class_ratios"]
+            props["analysis_type"] = "segmentation"
+        if "object_counts" in r:
+            props["object_counts"] = r["object_counts"]
+            props["detections"] = r.get("detections", [])
+            props["analysis_type"] = "detection"
+        features.append({
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": props,
+        })
+    return {
+        "type": "FeatureCollection",
+        "features": features,
+        "metadata": {
+            "job_id": job_id,
+            "status": job["status"],
+            "total_images": job["total_images"],
+            "processed": job["processed"],
+        },
+    }
+
+
+@router.get("/inference/latest")
+async def get_latest_job():
+    """Return the most recent job's status and ID."""
+    if not jobs:
+        return {"job_id": None, "status": "idle", "total_images": 0, "processed": 0}
+    latest_id = list(jobs.keys())[-1]
+    job = jobs[latest_id]
+    return {
+        "job_id": latest_id,
+        "status": job["status"],
+        "total_images": job["total_images"],
+        "processed": job["processed"],
+    }
