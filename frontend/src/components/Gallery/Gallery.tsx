@@ -19,6 +19,18 @@ function SkeletonBar({ w }: { w: string }) {
   return <div className={`skeleton h-3 rounded-full ${w}`} />;
 }
 
+function SkeletonGalleryCard() {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-card">
+      <div className="aspect-[4/3] skeleton" />
+      <div className="px-3.5 py-2.5 space-y-2">
+        <div className="skeleton h-3 rounded-full w-3/4" />
+        <div className="skeleton h-2 rounded-full w-1/2" />
+      </div>
+    </div>
+  );
+}
+
 function DashboardCard({
   title,
   icon: Icon,
@@ -247,6 +259,9 @@ export default function Gallery({ results, modelType, filters, onFiltersChange, 
               modelType={modelType}
               onClick={() => setInspectIndex(i)}
             />
+          ))}
+          {jobStatus?.running && Array.from({ length: Math.max(0, (jobStatus.total || 4) - filtered.length) }).map((_, i) => (
+            <SkeletonGalleryCard key={`skeleton-${i}`} />
           ))}
         </div>
 
