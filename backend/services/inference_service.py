@@ -1,6 +1,5 @@
 import asyncio
 import os
-import random
 from typing import AsyncIterator, Dict, List, Tuple
 
 import numpy as np
@@ -113,56 +112,6 @@ def _run_real_segmentation(
     ).model_dump()
 
 
-# ── Demo mode helpers (unchanged) ──
-
-
-def _demo_segmentation(image_id: str, classes: List[str], lat: float, lon: float) -> dict:
-    ranges = {
-        "vegetation": (0.15, 0.45), "road": (0.20, 0.40),
-        "building": (0.10, 0.30), "sidewalk": (0.05, 0.15),
-        "sky": (0.05, 0.20), "car": (0.02, 0.10),
-        "person": (0.01, 0.05), "terrain": (0.02, 0.08),
-        "pole": (0.01, 0.03), "fence": (0.01, 0.04),
-        "truck": (0.01, 0.05), "bus": (0.005, 0.03),
-        "bicycle": (0.005, 0.02), "wall": (0.02, 0.08),
-        "traffic sign": (0.005, 0.02),
-    }
-    target_classes = classes if classes else ["vegetation", "road", "building", "sidewalk", "sky"]
-    raw = {}
-    for cls in target_classes:
-        lo, hi = ranges.get(cls, (0.02, 0.10))
-        raw[cls] = random.uniform(lo, hi)
-    total = sum(raw.values())
-    class_ratios = {k: round(v / total, 4) for k, v in raw.items()}
-    return SegmentationResult(
-        image_id=image_id,
-        image_url=f"https://picsum.photos/seed/{image_id}/2048/1024",
-        latitude=lat, longitude=lon, class_ratios=class_ratios,
-    ).model_dump()
-
-
-def _demo_detection(image_id: str, classes: List[str], lat: float, lon: float) -> dict:
-    target_classes = classes if classes else ["car", "person", "truck", "bicycle"]
-    num_dets = random.randint(3, 10)
-    detections = []
-    object_counts: dict = {}
-    for _ in range(num_dets):
-        label = random.choice(target_classes)
-        conf = round(random.uniform(0.4, 0.95), 4)
-        x1, y1 = random.uniform(50, 1500), random.uniform(50, 800)
-        w, h = random.uniform(40, 300), random.uniform(40, 300)
-        detections.append({
-            "label": label, "confidence": conf,
-            "bbox": [round(x1, 1), round(y1, 1), round(x1 + w, 1), round(y1 + h, 1)],
-        })
-        object_counts[label] = object_counts.get(label, 0) + 1
-    return DetectionResult(
-        image_id=image_id,
-        image_url=f"https://picsum.photos/seed/{image_id}/2048/1024",
-        latitude=lat, longitude=lon, detections=detections, object_counts=object_counts,
-    ).model_dump()
-
-
 # ── Main batch inference ──
 
 
@@ -239,25 +188,78 @@ async def run_batch_inference(request: InferenceRequest) -> AsyncIterator[dict]:
                     yield {"image_id": image_id, "error": str(e)}
         return
 
-    # ── Demo mode for mapillary without tokens ──
-    random.seed(hash(request.model.model_id))
-    west, south, east, north = bbox
-    count = min(limit, 20)
+    # ── Mapillary: fetch real images and run inference ──
+    if source == "mapillary":
+        from backend.services.mapillary_service import fetch_images_in_bbox, download_image
 
-    for i in range(count):
-        lat = south + (north - south) * random.random()
-        lon = west + (east - west) * random.random()
-        image_id = f"demo_{i:04d}"
+        access_token = settings.MAPILLARY_ACCESS_TOKEN
+        if not access_token:
+            yield {"error": "Mapillary API token required. Get one free at mapillary.com/developer"}
+            return
 
+        # Fetch image metadata from Mapillary API
+        images = await fetch_images_in_bbox(bbox=bbox, limit=limit, access_token=access_token)
+        if not images:
+            yield {"error": "No Mapillary images found in this area. Try a different location."}
+            return
+
+        # Load model
         if model_type == ModelType.segmentation:
-            result = _demo_segmentation(image_id, classes, lat, lon)
+            from backend.services.huggingface_service import get_cached_model, load_model as hf_load
+            model_id = request.model.model_id
+            cached = get_cached_model(model_id)
+            if cached is None:
+                hf_load(model_id, model_type)
+                cached = get_cached_model(model_id)
+            model, processor, _ = cached
+
         elif model_type == ModelType.detection:
-            result = _demo_detection(image_id, classes, lat, lon)
+            from backend.services.huggingface_service import get_cached_model, load_model as hf_load
+            cached = get_cached_model(request.model.model_id)
+            if cached is None:
+                hf_load(request.model.model_id, model_type)
+                cached = get_cached_model(request.model.model_id)
+            model, _, _ = cached
         else:
-            continue
-        result["demo_mode"] = True
-        yield result
-        await asyncio.sleep(0.3)
+            yield {"error": f"Unsupported model type: {model_type}"}
+            return
+
+        for img_meta in images:
+            image_id = str(img_meta["id"])
+            thumb_url = img_meta.get("thumb_2048_url", "")
+            lat = img_meta.get("latitude")
+            lon = img_meta.get("longitude")
+
+            try:
+                # Download image locally for inference
+                local_path = await download_image(
+                    image_id=image_id,
+                    access_token=access_token,
+                    cache_dir=settings.CACHE_DIR,
+                )
+
+                if model_type == ModelType.segmentation:
+                    result = await asyncio.get_event_loop().run_in_executor(
+                        None,
+                        _run_real_segmentation,
+                        model, processor, local_path, classes, image_id,
+                    )
+                else:
+                    result = await asyncio.get_event_loop().run_in_executor(
+                        None, _run_detection, model, local_path, classes,
+                    )
+
+                # Use the real Mapillary thumbnail URL as the display image
+                result["image_url"] = thumb_url
+                result["latitude"] = lat
+                result["longitude"] = lon
+                yield result
+            except Exception as e:
+                yield {"image_id": image_id, "error": str(e)}
+        return
+
+    # ── Unknown source — error ──
+    yield {"error": f"Unknown data source type: {source}"}
 
 
 def _run_detection(model, image_path: str, classes: List[str]) -> dict:

@@ -9,9 +9,8 @@ interface Props {
 }
 
 const CITYSCAPES_SUGGESTIONS = [
-  'vegetation', 'sidewalk', 'road', 'building', 'sky',
-  'car', 'terrain', 'pole', 'fence',
-  'truck', 'bus', 'bicycle', 'wall', 'traffic sign',
+  'building', 'road', 'sidewalk', 'vegetation', 'terrain',
+  'pole', 'fence', 'wall', 'traffic sign',
 ];
 
 export default function ClassSelector({ value, onChange }: Props) {

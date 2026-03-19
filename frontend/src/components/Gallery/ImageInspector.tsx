@@ -36,7 +36,7 @@ export default function ImageInspector({ item, modelType, onClose, onPrev, onNex
 
   const imgSrc = item.image_url?.startsWith('/api')
     ? `${API_BASE}${item.image_url}`
-    : item.image_url || `https://placehold.co/600x400/e2e8f0/94a3b8?text=${encodeURIComponent(item.image_id)}`;
+    : item.image_url || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect fill='%23e2e8f0' width='600' height='400'/%3E%3Ctext x='50%25' y='50%25' fill='%2394a3b8' text-anchor='middle' dy='.3em' font-size='14'%3ENo image%3C/text%3E%3C/svg%3E`;
 
   const overlayUrl = !isDemo && isSegmentation
     ? `${API_URL}/inference/overlay/${encodeURIComponent(item.image_id)}`
@@ -61,7 +61,7 @@ export default function ImageInspector({ item, modelType, onClose, onPrev, onNex
         alt={item.image_id}
         className="w-full object-contain max-h-[50vh]"
         onError={(e) => {
-          (e.target as HTMLImageElement).src = `https://placehold.co/600x400/e2e8f0/94a3b8?text=${encodeURIComponent(item.image_id)}`;
+          (e.target as HTMLImageElement).src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect fill='%23e2e8f0' width='600' height='400'/%3E%3Ctext x='50%25' y='50%25' fill='%2394a3b8' text-anchor='middle' dy='.3em' font-size='14'%3ENo image%3C/text%3E%3C/svg%3E`;
         }}
       />
     </div>
@@ -75,7 +75,7 @@ export default function ImageInspector({ item, modelType, onClose, onPrev, onNex
         alt={item.image_id}
         className="w-full object-contain max-h-[50vh]"
         onError={(e) => {
-          (e.target as HTMLImageElement).src = `https://placehold.co/600x400/e2e8f0/94a3b8?text=${encodeURIComponent(item.image_id)}`;
+          (e.target as HTMLImageElement).src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect fill='%23e2e8f0' width='600' height='400'/%3E%3Ctext x='50%25' y='50%25' fill='%2394a3b8' text-anchor='middle' dy='.3em' font-size='14'%3ENo image%3C/text%3E%3C/svg%3E`;
         }}
       />
       {/* Overlay on top with transparency */}

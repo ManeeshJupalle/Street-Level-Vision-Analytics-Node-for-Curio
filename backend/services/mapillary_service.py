@@ -1,32 +1,10 @@
 import os
-import random
 from typing import List, Optional
 
 import aiohttp
 
 MAPILLARY_GRAPH_URL = "https://graph.mapillary.com"
 FIELDS = "id,geometry,captured_at,compass_angle,thumb_2048_url"
-
-
-def _generate_demo_images(bbox: List[float], limit: int) -> List[dict]:
-    """Generate mock image entries with real Chicago GPS coords for demo mode."""
-    west, south, east, north = bbox
-    random.seed(42)  # Deterministic for consistent demos
-    images = []
-    count = min(limit, 20)
-    for i in range(count):
-        lat = south + (north - south) * random.random()
-        lon = west + (east - west) * random.random()
-        images.append({
-            "id": f"demo_{i:04d}",
-            "latitude": round(lat, 6),
-            "longitude": round(lon, 6),
-            "captured_at": f"2024-06-{10 + (i % 20):02d}T10:{i % 60:02d}:00Z",
-            "compass_angle": round(random.uniform(0, 360), 1),
-            "thumb_2048_url": f"https://picsum.photos/seed/street{i}/2048/1024",
-            "is_demo": True,
-        })
-    return images
 
 
 async def fetch_images_in_bbox(
@@ -42,7 +20,7 @@ async def fetch_images_in_bbox(
     bbox: [west, south, east, north]
     """
     if not access_token:
-        return _generate_demo_images(bbox, limit)
+        raise ValueError("Mapillary API token required. Get one free at mapillary.com/developer")
 
     params = {
         "access_token": access_token,
@@ -91,16 +69,17 @@ async def download_image(
     access_token: str,
     cache_dir: str,
 ) -> str:
-    """Download an image by ID, caching locally."""
+    """Download an image by ID, caching locally.
+    Requires a valid Mapillary access token.
+    """
     os.makedirs(cache_dir, exist_ok=True)
     local_path = os.path.join(cache_dir, f"{image_id}.jpg")
 
     if os.path.exists(local_path):
         return local_path
 
-    # Demo mode: return a placeholder path
-    if not access_token or image_id.startswith("demo_"):
-        return f"https://picsum.photos/seed/{image_id}/2048/1024"
+    if not access_token:
+        raise ValueError("Mapillary API token required to download images.")
 
     url = f"{MAPILLARY_GRAPH_URL}/{image_id}"
     params = {"access_token": access_token, "fields": "thumb_2048_url"}

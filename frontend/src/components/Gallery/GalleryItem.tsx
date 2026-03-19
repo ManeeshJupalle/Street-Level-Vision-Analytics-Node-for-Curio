@@ -49,10 +49,13 @@ const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').r
 
 export default function GalleryItem({ item, onClick }: Props) {
   const metric = getPrimaryMetric(item);
+  const hasAnalysisData =
+    ('class_ratios' in item && Object.keys(item.class_ratios).length > 0) ||
+    ('object_counts' in item && Object.keys(item.object_counts).length > 0);
   const rawUrl = item.image_url || '';
   const imgSrc = rawUrl.startsWith('/api')
     ? `${API_BASE}${rawUrl}`
-    : rawUrl || `https://placehold.co/300x200/e2e8f0/94a3b8?text=${encodeURIComponent(item.image_id)}`;
+    : rawUrl;
 
   return (
     <button
@@ -66,16 +69,18 @@ export default function GalleryItem({ item, onClick }: Props) {
           className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
           loading="lazy"
           onError={(e) => {
-            (e.target as HTMLImageElement).src = `https://placehold.co/300x200/e2e8f0/94a3b8?text=${encodeURIComponent(item.image_id)}`;
+            (e.target as HTMLImageElement).src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect fill='%23e2e8f0' width='300' height='200'/%3E%3Ctext x='50%25' y='50%25' fill='%2394a3b8' text-anchor='middle' dy='.3em' font-size='12'%3ENo image%3C/text%3E%3C/svg%3E`;
           }}
         />
       </div>
 
-      <div
-        className={`absolute top-2.5 right-2.5 px-2.5 py-1 rounded-lg text-white text-[11px] font-semibold shadow-lg ${badgeBgs[metric.level]}`}
-      >
-        {metric.label}: {metric.value}
-      </div>
+      {hasAnalysisData && (
+        <div
+          className={`absolute top-2.5 right-2.5 px-2.5 py-1 rounded-lg text-white text-[11px] font-semibold shadow-lg ${badgeBgs[metric.level]}`}
+        >
+          {metric.label}: {metric.value}
+        </div>
+      )}
 
       <div className="px-3.5 py-2.5">
         <p className="text-xs font-semibold text-gray-800 truncate">{item.image_id}</p>
