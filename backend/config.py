@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    MAPILLARY_ACCESS_TOKEN: str = ""
+    GOOGLE_MAPS_API_KEY: str = ""
     HUGGINGFACE_TOKEN: str = ""
     CACHE_DIR: str = "./cache"
     MAX_BATCH_SIZE: int = 32

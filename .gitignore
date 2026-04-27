@@ -34,6 +34,11 @@ node_modules/
 .DS_Store
 Thumbs.db
 
-# Data artifacts
-data/sample_images/*.jpg
-data/sample_images/*.png
+# Flask cache
+flask_cache/
+
+# Curio fork (cloned separately — see docs/setup.md). Our additions live in curio-integration/.
+curio/
+
+# Curio runtime data exports
+.curio/

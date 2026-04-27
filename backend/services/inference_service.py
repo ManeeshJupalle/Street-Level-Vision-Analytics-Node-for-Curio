@@ -37,9 +37,6 @@ CITYSCAPES_COLORS: Dict[int, Tuple[int, int, int]] = {
 }
 
 OVERLAY_DIR = os.path.join(settings.CACHE_DIR, "overlays")
-SAMPLE_IMAGES_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "data", "sample_images")
-)
 
 
 def _ensure_overlay_dir():
@@ -56,7 +53,11 @@ def get_overlay_path(image_id: str) -> str:
 def _run_real_segmentation(
     model, processor, image_path: str, classes: List[str], image_id: str
 ) -> dict:
-    """Run actual SegFormer semantic segmentation on a single image."""
+    """Run semantic segmentation on a single image.
+
+    Handles SegFormer-style models (direct `logits` head) and Mask2Former /
+    OneFormer-style models (post_process_semantic_segmentation required).
+    """
     import torch
     from PIL import Image as PILImage
 
@@ -68,13 +69,23 @@ def _run_real_segmentation(
     with torch.no_grad():
         outputs = model(**inputs)
 
-    logits = outputs.logits  # (1, num_classes, H, W)
-
-    # Upsample logits to original image size
-    upsampled = torch.nn.functional.interpolate(
-        logits, size=(orig_h, orig_w), mode="bilinear", align_corners=False
-    )
-    pred = upsampled.argmax(dim=1).squeeze().cpu().numpy()  # (H, W)
+    # Prefer the processor's post_process — it handles Mask2Former, OneFormer,
+    # MaskFormer, SegFormer uniformly and returns a (H, W) class-id map.
+    if hasattr(processor, "post_process_semantic_segmentation"):
+        seg_maps = processor.post_process_semantic_segmentation(
+            outputs, target_sizes=[(orig_h, orig_w)]
+        )
+        pred = seg_maps[0].cpu().numpy()
+    elif hasattr(outputs, "logits"):
+        upsampled = torch.nn.functional.interpolate(
+            outputs.logits, size=(orig_h, orig_w), mode="bilinear", align_corners=False
+        )
+        pred = upsampled.argmax(dim=1).squeeze().cpu().numpy()
+    else:
+        raise ValueError(
+            f"Cannot extract semantic segmentation from outputs of type "
+            f"{type(outputs).__name__} — model is not a supported semantic seg head"
+        )
 
     # Compute per-class pixel ratios
     total_pixels = pred.size
@@ -107,7 +118,7 @@ def _run_real_segmentation(
 
     return SegmentationResult(
         image_id=image_id,
-        image_url=f"/api/data/sample/image/{image_id}",
+        image_url=image_path,
         class_ratios=class_ratios,
     ).model_dump()
 
@@ -116,21 +127,16 @@ def _run_real_segmentation(
 
 
 async def run_batch_inference(request: InferenceRequest) -> AsyncIterator[dict]:
-    """Run inference on images. Uses real SegFormer for folder/sample sources,
-    falls back to demo mode for mapillary without tokens."""
+    """Run inference on images from folder/sample or Google Street View sources."""
     model_type = request.model.model_type
     classes = request.classes.classes
     bbox = request.data_source.bbox or [-87.66, 41.91, -87.62, 41.94]
     limit = min(request.data_source.limit, 200)
     source = request.data_source.source_type.value
 
-    # ── Real inference for folder / sample_images ──
+    # ── Real inference for folder source ──
     if source in ("folder",):
         folder = request.data_source.folder_path or ""
-
-        # Resolve "sample_images" shortcut
-        if folder == "__sample_images__":
-            folder = SAMPLE_IMAGES_DIR
 
         if not os.path.isdir(folder):
             yield {"error": f"Folder not found: {folder}"}
@@ -146,13 +152,15 @@ async def run_batch_inference(request: InferenceRequest) -> AsyncIterator[dict]:
                     break
 
         if model_type == ModelType.segmentation:
-            # Load real model
+            # Load real model (off the event loop — model downloads can take >30s)
             from backend.services.huggingface_service import get_cached_model, load_model
 
             model_id = request.model.model_id
             cached = get_cached_model(model_id)
             if cached is None:
-                load_model(model_id, model_type)
+                await asyncio.get_event_loop().run_in_executor(
+                    None, load_model, model_id, model_type,
+                )
                 cached = get_cached_model(model_id)
             model, processor, _ = cached
 
@@ -173,7 +181,9 @@ async def run_batch_inference(request: InferenceRequest) -> AsyncIterator[dict]:
 
             cached = get_cached_model(request.model.model_id)
             if cached is None:
-                load_model(request.model.model_id, model_type)
+                await asyncio.get_event_loop().run_in_executor(
+                    None, load_model, request.model.model_id, model_type,
+                )
                 cached = get_cached_model(request.model.model_id)
             model, _, _ = cached
 
@@ -188,28 +198,34 @@ async def run_batch_inference(request: InferenceRequest) -> AsyncIterator[dict]:
                     yield {"image_id": image_id, "error": str(e)}
         return
 
-    # ── Mapillary: fetch real images and run inference ──
-    if source == "mapillary":
-        from backend.services.mapillary_service import fetch_images_in_bbox, download_image
+    # ── Google Street View: fetch real images and run inference ──
+    if source == "google_streetview":
+        from backend.services.google_streetview_service import (
+            fetch_images_in_bbox,
+            download_image,
+            get_image_url_by_pano,
+        )
 
-        access_token = settings.MAPILLARY_ACCESS_TOKEN
-        if not access_token:
-            yield {"error": "Mapillary API token required. Get one free at mapillary.com/developer"}
+        api_key = settings.GOOGLE_MAPS_API_KEY
+        if not api_key:
+            yield {"error": "Google Maps API key required. Set GOOGLE_MAPS_API_KEY in .env"}
             return
 
-        # Fetch image metadata from Mapillary API
-        images = await fetch_images_in_bbox(bbox=bbox, limit=limit, access_token=access_token)
+        # Fetch image metadata via Street View Metadata API
+        images = await fetch_images_in_bbox(bbox=bbox, limit=limit, api_key=api_key)
         if not images:
-            yield {"error": "No Mapillary images found in this area. Try a different location."}
+            yield {"error": "No Street View images found in this area. Try a different location."}
             return
 
-        # Load model
+        # Load model (off the event loop — model downloads can take >30s)
         if model_type == ModelType.segmentation:
             from backend.services.huggingface_service import get_cached_model, load_model as hf_load
             model_id = request.model.model_id
             cached = get_cached_model(model_id)
             if cached is None:
-                hf_load(model_id, model_type)
+                await asyncio.get_event_loop().run_in_executor(
+                    None, hf_load, model_id, model_type,
+                )
                 cached = get_cached_model(model_id)
             model, processor, _ = cached
 
@@ -217,7 +233,9 @@ async def run_batch_inference(request: InferenceRequest) -> AsyncIterator[dict]:
             from backend.services.huggingface_service import get_cached_model, load_model as hf_load
             cached = get_cached_model(request.model.model_id)
             if cached is None:
-                hf_load(request.model.model_id, model_type)
+                await asyncio.get_event_loop().run_in_executor(
+                    None, hf_load, request.model.model_id, model_type,
+                )
                 cached = get_cached_model(request.model.model_id)
             model, _, _ = cached
         else:
@@ -225,17 +243,20 @@ async def run_batch_inference(request: InferenceRequest) -> AsyncIterator[dict]:
             return
 
         for img_meta in images:
-            image_id = str(img_meta["id"])
-            thumb_url = img_meta.get("thumb_2048_url", "")
+            pano_id = img_meta["pano_id"]
+            image_id = pano_id
             lat = img_meta.get("latitude")
             lon = img_meta.get("longitude")
+            display_url = get_image_url_by_pano(pano_id, api_key, heading=0)
 
             try:
                 # Download image locally for inference
                 local_path = await download_image(
-                    image_id=image_id,
-                    access_token=access_token,
+                    pano_id=pano_id,
+                    api_key=api_key,
                     cache_dir=settings.CACHE_DIR,
+                    lat=lat,
+                    lon=lon,
                 )
 
                 if model_type == ModelType.segmentation:
@@ -249,8 +270,7 @@ async def run_batch_inference(request: InferenceRequest) -> AsyncIterator[dict]:
                         None, _run_detection, model, local_path, classes,
                     )
 
-                # Use the real Mapillary thumbnail URL as the display image
-                result["image_url"] = thumb_url
+                result["image_url"] = display_url
                 result["latitude"] = lat
                 result["longitude"] = lon
                 yield result

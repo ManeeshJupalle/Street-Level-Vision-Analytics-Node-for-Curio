@@ -15,4 +15,5 @@ pydantic-settings
 python-dotenv
 aiohttp
 aiofiles
+httpx
 huggingface-hub

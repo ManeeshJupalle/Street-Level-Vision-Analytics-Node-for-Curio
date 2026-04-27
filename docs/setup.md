@@ -13,13 +13,13 @@ Detailed installation and configuration instructions for the Street-Level Vision
 | pip | Latest | Comes with Python |
 | npm | 9+ | Comes with Node.js |
 | Git | Any | For cloning the repository |
+| Google Maps API key | — | Required for Street View data — must have **Street View Static API** and **Street View Metadata API** enabled |
 
 ### Optional API Tokens
 
 | Token | Purpose | Required? |
 |-------|---------|-----------|
-| Mapillary API v4 | Real street-level image fetching | No — demo mode works without it |
-| HuggingFace | Access private models | No — public models work without it |
+| HuggingFace | Access private or gated models | No — public models work without it |
 
 ---
 
@@ -35,6 +35,8 @@ cd Street-Level-Vision-Analytics-Node-for-Curio
 ## Step 2: Backend Setup
 
 ### Create a Virtual Environment
+
+Create the venv at the **repository root** (not inside a subfolder):
 
 ```bash
 python -m venv .venv
@@ -65,7 +67,7 @@ This installs:
 - **ultralytics** — YOLOv8 object detection
 - **geopandas + shapely** — spatial processing
 - **Pillow + numpy** — image processing
-- **aiohttp** — async HTTP for Mapillary API
+- **httpx / aiohttp** — async HTTP for Google Street View + Nominatim APIs
 - **pydantic-settings + python-dotenv** — configuration management
 
 ### Configure Environment Variables
@@ -74,12 +76,14 @@ This installs:
 cp .env.example .env
 ```
 
-Edit `.env` with your tokens (both are optional):
+Edit `.env` with your Google Maps API key (required for real Street View data):
 
 ```env
-MAPILLARY_ACCESS_TOKEN=MLY|your_token_here
+GOOGLE_MAPS_API_KEY=AIza...your_key_here
 HUGGINGFACE_TOKEN=hf_your_token_here
 ```
+
+> **Note:** There is no "demo mode" fallback for imagery anymore. If `GOOGLE_MAPS_API_KEY` is not set, the Street View endpoints return HTTP 400. You can still use the **Folder** data source (local images) without any API key.
 
 ### Start the Backend Server
 
@@ -97,11 +101,13 @@ You should see:
 {
   "status": "healthy",
   "version": "0.1.0",
-  "demo_mode": true,
-  "has_mapillary_token": false,
+  "demo_mode": false,
+  "has_google_api_key": true,
   "has_huggingface_token": false
 }
 ```
+
+`demo_mode` is simply `not has_google_api_key` — it will be `true` only if the Google Maps API key is missing.
 
 ---
 
@@ -115,44 +121,29 @@ npm install
 npm run dev
 ```
 
-The frontend starts at `http://localhost:5173`. It connects to the backend at `http://localhost:8000/api`.
+The frontend starts at `http://localhost:5173`. It connects to the backend at `http://localhost:8000/api` (the exact base is resolved at runtime by `frontend/src/utils/apiBase.ts`, which handles both standalone Vite and webpack/Curio embedding contexts).
 
 ---
 
-## Step 4: Download Sample Images (Optional)
+## Step 4: Google Maps API Key
 
-To use the bundled sample image data source:
+To fetch real street-level images by geographic bounding box or by place name:
 
-```bash
-python scripts/download_samples.py
-```
-
-This downloads 20 real Mapillary street-level images to `data/sample_images/` from:
-- New York City (Times Square, Central Park)
-- Chicago (Lincoln Park)
-- San Francisco
-- Paris
-- London
-
----
-
-## Step 5: Mapillary API Token (Optional)
-
-To fetch real street-level images by geographic bounding box:
-
-1. Go to [mapillary.com](https://www.mapillary.com/) and create a free account
-2. Navigate to [Developer settings](https://www.mapillary.com/developer)
-3. Register a new application
-4. Copy the **Client Token** (starts with `MLY|`)
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/) and create (or select) a project
+2. Under **APIs & Services → Library**, enable both:
+   - **Street View Static API**
+   - **Street View Publish API / Metadata API** (the metadata endpoint is used for free coverage checks)
+3. Under **APIs & Services → Credentials**, create an **API key**
+4. (Recommended) Restrict the key to the two APIs above
 5. Add it to your `.env`:
    ```env
-   MAPILLARY_ACCESS_TOKEN=MLY|your_token_here
+   GOOGLE_MAPS_API_KEY=AIza...your_key_here
    ```
-6. Restart the backend — the health endpoint will show `"demo_mode": false`
+6. Restart the backend — the health endpoint will show `"has_google_api_key": true` and `"demo_mode": false`
 
 ---
 
-## Step 6: HuggingFace Token (Optional)
+## Step 5: HuggingFace Token (Optional)
 
 Only needed if you want to access private or gated models:
 
@@ -164,6 +155,19 @@ Only needed if you want to access private or gated models:
    ```
 
 Public models (like `nvidia/segformer-b2-finetuned-cityscapes-1024-1024`) work without a token.
+
+---
+
+## Quick-Start Demo Flow
+
+Once the backend and frontend are running:
+
+1. **Select a model** — pick a segmentation or detection model from the list (e.g., SegFormer B2 Cityscapes).
+2. **Search a place** — in the Data Source panel, type a place name (e.g. *"Lincoln Park Chicago"*), pick a result from the dropdown, then click **Check Coverage** to see how many Street View panos are available in that bounding box.
+3. **Pick target classes** — use the chip selector or paste a CSV.
+4. **Run Analysis** — watch results stream in as each image is processed.
+
+(There are no bundled sample images. If you want to run against local photos, use the **Folder** data source and point it at any directory of `.jpg/.png/.webp` files.)
 
 ---
 
@@ -200,7 +204,7 @@ cd curio/utk_curio/frontend/urban-workflows
 npx webpack serve --mode development --port 3000
 ```
 
-Then open `http://localhost:3000` and drag the "Street Vision" node from the palette.
+Then open `http://localhost:3000` and drag the **Street Vision** node and the **CV Analysis** node from the palette — connect the Street Vision JSON output to the CV Analysis JSON input.
 
 ---
 
@@ -209,7 +213,7 @@ Then open `http://localhost:3000` and drag the "Street Vision" node from the pal
 ### Backend won't start
 
 - **`ModuleNotFoundError`** — Make sure your virtual environment is activated and dependencies are installed
-- **Port 8000 in use** — Use `uvicorn backend.main:app --reload --port 8001` and update `frontend/src/services/api.ts` accordingly
+- **Port 8000 in use** — Use `uvicorn backend.main:app --reload --port 8001` and update the frontend API base accordingly
 
 ### Frontend can't connect to backend
 
@@ -221,10 +225,10 @@ Then open `http://localhost:3000` and drag the "Street Vision" node from the pal
 - First-time model downloads from HuggingFace can take several minutes depending on model size
 - Models are cached locally in `model_cache/` after the first download
 
-### Demo mode is always active
+### Street View endpoints return 400
 
 - Check that your `.env` file exists in the project root (not in `backend/`)
-- Verify the token format: `MAPILLARY_ACCESS_TOKEN=MLY|...`
+- Verify the key starts with `AIza` and that **Street View Static API** + **Street View Metadata API** are enabled in Google Cloud Console
 - Restart the backend after changing `.env`
 
 ### torch installation issues

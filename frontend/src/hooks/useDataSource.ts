@@ -10,7 +10,7 @@ export function useDataSource() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.post('/data/mapillary/coverage', { bbox });
+      const res = await api.post('/data/streetview/coverage', { bbox });
       setCoverage(res.data.estimated_count);
     } catch (e: any) {
       setError(e.response?.data?.detail ?? e.message);

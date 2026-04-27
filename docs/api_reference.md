@@ -18,8 +18,8 @@ Check backend status and configuration.
 {
   "status": "healthy",
   "version": "0.1.0",
-  "demo_mode": true,
-  "has_mapillary_token": false,
+  "demo_mode": false,
+  "has_google_api_key": true,
   "has_huggingface_token": false
 }
 ```
@@ -28,9 +28,9 @@ Check backend status and configuration.
 |-------|------|-------------|
 | `status` | string | Always `"healthy"` if the server is running |
 | `version` | string | API version |
-| `demo_mode` | boolean | `true` if no Mapillary token is configured |
-| `has_mapillary_token` | boolean | Whether a Mapillary token is set |
-| `has_huggingface_token` | boolean | Whether a HuggingFace token is set |
+| `demo_mode` | boolean | `true` iff no Google Maps API key is configured (equals `not has_google_api_key`) |
+| `has_google_api_key` | boolean | Whether `GOOGLE_MAPS_API_KEY` is set |
+| `has_huggingface_token` | boolean | Whether `HUGGINGFACE_TOKEN` is set |
 
 ---
 
@@ -144,27 +144,23 @@ Load a model into memory for inference.
 
 ## Data Sources
 
-### `POST /api/data/mapillary/fetch`
+### `POST /api/data/streetview/fetch`
 
-Fetch street-level images within a geographic bounding box.
+Fetch Google Street View panorama metadata within a geographic bounding box. Requires `GOOGLE_MAPS_API_KEY`.
 
 **Request Body:**
 
 ```json
 {
   "bbox": [-87.66, 41.91, -87.62, 41.94],
-  "limit": 20,
-  "start_date": null,
-  "end_date": null
+  "limit": 20
 }
 ```
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `bbox` | float[4] | Yes | Bounding box: `[west, south, east, north]` |
-| `limit` | integer | No | Max images to return (default: 100) |
-| `start_date` | string | No | Filter by capture date (ISO format) |
-| `end_date` | string | No | Filter by capture date (ISO format) |
+| `limit` | integer | No | Max panoramas to return (default: 100) |
 
 **Response:**
 
@@ -172,56 +168,81 @@ Fetch street-level images within a geographic bounding box.
 {
   "images": [
     {
-      "image_id": "123456789",
+      "pano_id": "CAoSLEFGMVFpcE1...",
       "latitude": 41.925,
       "longitude": -87.645,
-      "captured_at": "2023-06-15T14:30:00Z",
-      "thumb_url": "https://..."
+      "date": "2023-06",
+      "image_url": "https://maps.googleapis.com/maps/api/streetview?size=640x640&pano=...&key=..."
     }
   ],
-  "count": 20,
-  "demo_mode": false
+  "count": 20
 }
 ```
 
+**Errors:**
+
+| Status | Description |
+|--------|-------------|
+| 400 | `GOOGLE_MAPS_API_KEY` not configured |
+| 500 | Upstream Google API error |
+
 ---
 
-### `POST /api/data/mapillary/coverage`
+### `POST /api/data/streetview/coverage`
 
-Check how many images are available in a bounding box without downloading them.
+Estimate how many Street View panoramas are available in a bounding box without consuming image quota (uses the Metadata API only).
 
-**Request Body:** Same as `/data/mapillary/fetch`.
+**Request Body:** Same as `/data/streetview/fetch`.
 
 **Response:**
 
 ```json
 {
   "bbox": [-87.66, 41.91, -87.62, 41.94],
-  "estimated_count": 150,
-  "demo_mode": false
+  "estimated_count": 150
 }
 ```
 
+**Errors:**
+
+| Status | Description |
+|--------|-------------|
+| 400 | `GOOGLE_MAPS_API_KEY` not configured |
+
 ---
 
-### `GET /api/data/mapillary/image/{image_id}`
+### `GET /api/data/streetview/search_place`
 
-Download a specific Mapillary image (cached locally).
+Geocode a free-text place name via Nominatim (OpenStreetMap) and return a bounding box suitable for feeding into the coverage / fetch endpoints.
 
-**Path Parameters:**
+**Query Parameters:**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `image_id` | string | Mapillary image ID |
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `query` | string | Yes | Place name, e.g. `"Lincoln Park Chicago"` |
+
+**Example:**
+
+```
+GET /api/data/streetview/search_place?query=Lincoln%20Park%20Chicago
+```
 
 **Response:**
 
 ```json
 {
-  "image_id": "123456789",
-  "local_path": "./cache/123456789.jpg"
+  "name": "Lincoln Park, Chicago, Cook County, Illinois, United States",
+  "bbox": [-87.6601, 41.9100, -87.6200, 41.9400],
+  "lat": 41.9254,
+  "lon": -87.6386
 }
 ```
+
+**Errors:**
+
+| Status | Description |
+|--------|-------------|
+| 404 | Place not found |
 
 ---
 
@@ -262,47 +283,6 @@ Load images from a local file system folder.
 
 ---
 
-### `GET /api/data/sample/list`
-
-List bundled sample images from `data/sample_images/`.
-
-**Response:**
-
-```json
-{
-  "images": [
-    {
-      "image_id": "nyc_times_square_01.jpg",
-      "path": "/absolute/path/to/data/sample_images/nyc_times_square_01.jpg",
-      "filename": "nyc_times_square_01.jpg"
-    }
-  ],
-  "count": 20
-}
-```
-
----
-
-### `GET /api/data/sample/image/{filename}`
-
-Serve a sample image file.
-
-**Path Parameters:**
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `filename` | string | Image filename from the sample list |
-
-**Response:** JPEG image file (`Content-Type: image/jpeg`).
-
-**Errors:**
-
-| Status | Description |
-|--------|-------------|
-| 404 | Image not found |
-
----
-
 ## Inference
 
 ### `POST /api/inference/run`
@@ -320,9 +300,9 @@ Start an asynchronous inference job.
     "description": ""
   },
   "data_source": {
-    "source_type": "folder",
-    "folder_path": "__sample_images__",
-    "bbox": null,
+    "source_type": "google_streetview",
+    "folder_path": null,
+    "bbox": [-87.66, 41.91, -87.62, 41.94],
     "limit": 20
   },
   "classes": {
@@ -336,9 +316,9 @@ Start an asynchronous inference job.
 |-------|------|-------------|
 | `model` | ModelInfo | Model to use (see Models section) |
 | `data_source` | DataSourceConfig | Where to get images |
-| `data_source.source_type` | string | `"folder"`, `"mapillary"`, or `"url"` |
-| `data_source.folder_path` | string | Path to folder, or `"__sample_images__"` for samples |
-| `data_source.bbox` | float[4] | Bounding box for Mapillary source |
+| `data_source.source_type` | string | `"folder"` or `"google_streetview"` |
+| `data_source.folder_path` | string | Path to folder (required when `source_type == "folder"`) |
+| `data_source.bbox` | float[4] | Bounding box for `google_streetview` source: `[west, south, east, north]` |
 | `data_source.limit` | integer | Max images to process |
 | `classes` | ClassConfig | Target classes for analysis |
 | `classes.classes` | string[] | List of class names |
@@ -405,10 +385,10 @@ Get job results including all processed images.
   "processed": 20,
   "results": [
     {
-      "image_id": "nyc_times_square_01.jpg",
-      "image_url": "/api/data/sample/image/nyc_times_square_01.jpg",
-      "latitude": 40.758,
-      "longitude": -73.9855,
+      "image_id": "CAoSLEFGMVFpcE1...",
+      "image_url": "https://maps.googleapis.com/maps/api/streetview?...",
+      "latitude": 41.925,
+      "longitude": -87.645,
       "class_ratios": {
         "road": 0.32,
         "building": 0.25,
@@ -431,8 +411,8 @@ Get job results including all processed images.
   "processed": 20,
   "results": [
     {
-      "image_id": "chicago_lincoln_park_01.jpg",
-      "image_url": "/api/data/sample/image/chicago_lincoln_park_01.jpg",
+      "image_id": "CAoSLEFGMVFpcE1...",
+      "image_url": "https://maps.googleapis.com/maps/api/streetview?...",
       "latitude": 41.925,
       "longitude": -87.645,
       "detections": [
@@ -494,11 +474,11 @@ Export inference results as a GeoJSON FeatureCollection.
       "type": "Feature",
       "geometry": {
         "type": "Point",
-        "coordinates": [-73.9855, 40.758]
+        "coordinates": [-87.645, 41.925]
       },
       "properties": {
-        "image_id": "nyc_times_square_01.jpg",
-        "image_url": "/api/data/sample/image/nyc_times_square_01.jpg",
+        "image_id": "CAoSLEFGMVFpcE1...",
+        "image_url": "https://maps.googleapis.com/maps/api/streetview?...",
         "analysis_type": "segmentation",
         "class_ratios": {
           "road": 0.32,
@@ -521,9 +501,87 @@ This format is directly consumable by Curio's map and chart nodes.
 
 ---
 
+### `GET /api/inference/results/{job_id}/dataframe`
+
+Return results in a flat, column-oriented format ready for Vega-Lite consumption (used by the CV_ANALYSIS Curio node for in-canvas charts).
+
+**Response:**
+
+```json
+{
+  "columns": {
+    "image_id": ["CAoSLEFG...", "CAoSLEFH..."],
+    "latitude": [41.925, 41.926],
+    "longitude": [-87.645, -87.644],
+    "analysis_type": ["segmentation", "segmentation"],
+    "building": [0.25, 0.22],
+    "road": [0.32, 0.30],
+    "vegetation": [0.18, 0.21]
+  },
+  "rows": [
+    {
+      "image_id": "CAoSLEFG...",
+      "latitude": 41.925,
+      "longitude": -87.645,
+      "analysis_type": "segmentation",
+      "building": 0.25,
+      "road": 0.32,
+      "vegetation": 0.18
+    }
+  ],
+  "total": 2,
+  "class_keys": ["building", "road", "vegetation"]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `columns` | object | Column-oriented arrays — each key maps to a list of per-image values |
+| `rows` | array | Row-oriented records (Vega-Lite `values` format) |
+| `total` | integer | Number of rows / images |
+| `class_keys` | string[] | Sorted list of class/detection keys that appear as columns |
+
+**Errors:**
+
+| Status | Description |
+|--------|-------------|
+| 404 | Job ID not found |
+
+---
+
+### `GET /api/inference/results/{job_id}/curio_export`
+
+Write a Curio-native compressed `.data` file (zlib-compressed JSON wrapping a column-oriented GeoDataFrame) into Curio's shared data directory and return a reference the CV_ANALYSIS node can feed directly to downstream Map / Table nodes.
+
+**Response:**
+
+```json
+{
+  "path": "1713450000_1a2b3c4d5e6f7890abcd1234.data",
+  "dataType": "geodataframe",
+  "filename": "1713450000_1a2b3c4d5e6f7890abcd1234.data",
+  "feature_count": 20
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `path` | string | Filename (Curio resolves this against its shared data directory) |
+| `dataType` | string | Always `"geodataframe"` |
+| `filename` | string | Same as `path`, convenience duplicate |
+| `feature_count` | integer | Number of features written |
+
+**Errors:**
+
+| Status | Description |
+|--------|-------------|
+| 404 | Job ID not found |
+
+---
+
 ### `GET /api/inference/latest`
 
-Get the status of the most recent inference job.
+Get the status of the most recent inference job. Used by the STREET_VISION Curio node for progress polling.
 
 **Response:**
 
@@ -562,5 +620,6 @@ All endpoints return errors in a consistent format:
 | Status Code | Meaning |
 |-------------|---------|
 | 200 | Success |
-| 404 | Resource not found (model, job, image, folder) |
-| 500 | Internal server error (model loading failure, API error) |
+| 400 | Missing required configuration (e.g., `GOOGLE_MAPS_API_KEY`) |
+| 404 | Resource not found (model, job, image, folder, place) |
+| 500 | Internal server error (model loading failure, upstream API error) |

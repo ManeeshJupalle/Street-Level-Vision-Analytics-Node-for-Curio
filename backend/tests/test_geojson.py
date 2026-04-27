@@ -26,7 +26,7 @@ def _seed_job(num_results=3, model_type="segmentation"):
         if model_type == "segmentation":
             results.append({
                 "image_id": f"test_{i:03d}.jpg",
-                "image_url": f"/api/data/sample/image/test_{i:03d}.jpg",
+                "image_url": f"/images/test_{i:03d}.jpg",
                 "latitude": 41.91 + i * 0.01,
                 "longitude": -87.65 + i * 0.005,
                 "class_ratios": {"vegetation": 0.35, "road": 0.30, "building": 0.20},
@@ -34,7 +34,7 @@ def _seed_job(num_results=3, model_type="segmentation"):
         else:
             results.append({
                 "image_id": f"test_{i:03d}.jpg",
-                "image_url": f"/api/data/sample/image/test_{i:03d}.jpg",
+                "image_url": f"/images/test_{i:03d}.jpg",
                 "latitude": 41.91 + i * 0.01,
                 "longitude": -87.65 + i * 0.005,
                 "detections": [

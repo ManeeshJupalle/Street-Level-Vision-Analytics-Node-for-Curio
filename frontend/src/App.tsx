@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { FiAlertTriangle, FiWifi, FiRefreshCw } from 'react-icons/fi';
+import { useState, useEffect, useCallback } from 'react';
+import { FiWifi, FiRefreshCw } from 'react-icons/fi';
 import ConfigPanel from './components/ConfigPanel/ConfigPanel';
 import Gallery from './components/Gallery/Gallery';
 import api from './services/api';
@@ -24,29 +24,18 @@ export default function App() {
     error?: string;
   }>({ running: false, total: 0, processed: 0 });
   const [filters, setFilters] = useState<FilterRule[]>([]);
-  const [backendDemoMode, setBackendDemoMode] = useState(false);
   const [backendUp, setBackendUp] = useState(true);
 
   const checkBackend = useCallback(() => {
     api
       .get('/health')
-      .then((res) => {
-        setBackendDemoMode(res.data.demo_mode ?? false);
-        setBackendUp(true);
-      })
+      .then(() => setBackendUp(true))
       .catch(() => setBackendUp(false));
   }, []);
 
   useEffect(() => {
     checkBackend();
   }, [checkBackend]);
-
-  const resultsAreDemo = useMemo(() => {
-    if (results.length === 0) return false;
-    return results.some((r: any) => r.demo_mode === true);
-  }, [results]);
-
-  const showDemoBanner = backendDemoMode && (results.length === 0 || resultsAreDemo);
 
   const handleDataSourceChange = useCallback((d: DataSourceConfig) => {
     setDataSource(d);
@@ -58,13 +47,6 @@ export default function App() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-[#f8f9fc]">
-      {showDemoBanner && (
-        <div className="shrink-0 bg-amber-500 text-amber-950 text-xs font-semibold flex items-center justify-center gap-2 py-1.5 px-4">
-          <FiAlertTriangle className="text-sm" />
-          DEMO MODE — Select "Sample Images" to run real SegFormer inference.
-        </div>
-      )}
-
       {!backendUp && (
         <div className="shrink-0 bg-rose-500 text-white text-xs font-semibold flex items-center justify-center gap-2 py-1.5 px-4">
           <FiWifi className="text-sm" />
@@ -91,7 +73,6 @@ export default function App() {
             jobStatus={jobStatus}
             onJobStatusChange={setJobStatus}
             onResults={setResults}
-            demoMode={showDemoBanner}
           />
         </div>
 

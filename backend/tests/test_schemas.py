@@ -58,13 +58,13 @@ class TestDataSourceConfig:
         assert config.folder_path == "/path/to/images"
         assert config.limit == 50
 
-    def test_mapillary_source(self):
+    def test_google_streetview_source(self):
         config = DataSourceConfig(
-            source_type=DataSourceType.mapillary,
+            source_type=DataSourceType.google_streetview,
             bbox=[-87.66, 41.91, -87.62, 41.94],
             limit=100,
         )
-        assert config.source_type == DataSourceType.mapillary
+        assert config.source_type == DataSourceType.google_streetview
         assert len(config.bbox) == 4
 
     def test_default_limit(self):
@@ -107,7 +107,7 @@ class TestSegmentationResult:
     def test_full_result(self):
         result = SegmentationResult(
             image_id="test_001.jpg",
-            image_url="/api/data/sample/image/test_001.jpg",
+            image_url="/images/test_001.jpg",
             latitude=41.925,
             longitude=-87.645,
             class_ratios={"vegetation": 0.35, "road": 0.30, "building": 0.20},
@@ -127,7 +127,7 @@ class TestDetectionResult:
     def test_full_result(self):
         result = DetectionResult(
             image_id="test_002.jpg",
-            image_url="/api/data/sample/image/test_002.jpg",
+            image_url="/images/test_002.jpg",
             latitude=41.88,
             longitude=-87.63,
             detections=[
@@ -155,7 +155,7 @@ class TestInferenceRequest:
             ),
             data_source=DataSourceConfig(
                 source_type=DataSourceType.folder,
-                folder_path="__sample_images__",
+                folder_path="/tmp/images",
                 limit=20,
             ),
             classes=ClassConfig(

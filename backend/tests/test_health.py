@@ -17,7 +17,7 @@ def test_health_response_structure():
     assert data["status"] == "healthy"
     assert data["version"] == "0.1.0"
     assert "demo_mode" in data
-    assert "has_mapillary_token" in data
+    assert "has_google_api_key" in data
     assert "has_huggingface_token" in data
 
 
@@ -25,5 +25,5 @@ def test_health_demo_mode_type():
     response = client.get("/api/health")
     data = response.json()
     assert isinstance(data["demo_mode"], bool)
-    assert isinstance(data["has_mapillary_token"], bool)
+    assert isinstance(data["has_google_api_key"], bool)
     assert isinstance(data["has_huggingface_token"], bool)

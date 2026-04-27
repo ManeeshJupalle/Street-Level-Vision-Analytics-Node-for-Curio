@@ -20,6 +20,7 @@ jobs: Dict[str, dict] = {}
 
 
 async def _run_inference_job(job_id: str, request: InferenceRequest):
+    import traceback
     jobs[job_id]["status"] = "running"
     try:
         results = []
@@ -30,7 +31,9 @@ async def _run_inference_job(job_id: str, request: InferenceRequest):
         jobs[job_id]["status"] = "completed"
     except Exception as e:
         jobs[job_id]["status"] = "failed"
-        jobs[job_id]["error"] = str(e)
+        jobs[job_id]["error"] = f"{type(e).__name__}: {e}"
+        # Surface the full traceback to backend stderr so we can debug.
+        traceback.print_exc()
 
 
 @router.post("/inference/run")
@@ -61,6 +64,7 @@ async def get_inference_status(job_id: str):
         status=job["status"],
         total_images=job["total_images"],
         processed=job["processed"],
+        error=job.get("error"),
     )
 
 
@@ -137,9 +141,13 @@ async def export_for_curio(job_id: str):
             if lat is not None and lon is not None
             else None
         )
+        # Carry lat/lon into properties so downstream consumers (Vega-Lite,
+        # tables) that only read feature.properties can still see coordinates.
         props = {
             "image_id": r.get("image_id", ""),
             "image_url": r.get("image_url", ""),
+            "latitude": lat,
+            "longitude": lon,
         }
         if "class_ratios" in r:
             for k, v in r["class_ratios"].items():
@@ -155,34 +163,25 @@ async def export_for_curio(job_id: str):
             "properties": props,
         })
 
-    # Build data in Curio's expected format: {data: {...columns...}, dataType: "geodataframe"}
-    # Curio stores GeoDataFrames as column-oriented dicts
-    columns: Dict[str, list] = {"geometry": []}
-    for feat in features:
-        columns["geometry"].append(json.dumps(feat["geometry"]) if feat["geometry"] else None)
-        for key, val in feat.get("properties", {}).items():
-            if key not in columns:
-                columns[key] = [None] * (len(columns["geometry"]) - 1)
-            columns[key].append(val)
-        # Pad any missing keys
-        for key in columns:
-            if key != "geometry" and len(columns[key]) < len(columns["geometry"]):
-                columns[key].append(None)
+    # Build data in Curio's expected geodataframe format:
+    # { dataType: "geodataframe", data: { type: "FeatureCollection", features: [...] } }
+    # parseGeoDataframe in the frontend reads `data.features.map(f => f.properties)`,
+    # so each row's columns must live on `properties`. The `metadata.name` is required
+    # by UTK; attach at the FeatureCollection level (UTK reads either location).
+    feature_collection = {
+        "type": "FeatureCollection",
+        "features": features,
+        "metadata": {"name": "street_vision_results"},
+    }
+    curio_data = {"data": feature_collection, "dataType": "geodataframe"}
 
-    # UTK requires metadata.name on each geojson layer
-    columns["metadata"] = {"name": "street_vision_results"}
-    curio_data = {"data": columns, "dataType": "geodataframe"}
-
-    # Save to Curio's shared data directory
+    # Save to Curio's shared data directory.
+    # Curio Flask is launched from <repo>/curio/, with CURIO_SHARED_DATA defaulting to "./.curio/data/",
+    # so it reads from <repo>/curio/.curio/data/. We must write to the same place.
     curio_data_dir = os.environ.get("CURIO_SHARED_DATA", "")
     if not curio_data_dir:
-        # Try to find it relative to the curio project
-        candidate = Path(__file__).resolve().parents[3] / "curio" / ".curio" / "data"
-        if candidate.exists():
-            curio_data_dir = str(candidate)
-        else:
-            # Fallback: create alongside the project
-            curio_data_dir = str(Path(__file__).resolve().parents[2] / ".curio" / "data")
+        repo_root = Path(__file__).resolve().parents[2]  # backend/routers/.. /.. = repo root
+        curio_data_dir = str(repo_root / "curio" / ".curio" / "data")
 
     save_dir = Path(curio_data_dir).resolve()
     os.makedirs(save_dir, exist_ok=True)
@@ -209,6 +208,63 @@ async def export_for_curio(job_id: str):
     }
 
 
+@router.get("/inference/results/{job_id}/dataframe")
+async def get_inference_dataframe(job_id: str):
+    """Return results as a flat DataFrame (column-oriented) for Vega-Lite consumption."""
+    if job_id not in jobs:
+        raise HTTPException(status_code=404, detail="Job not found")
+    job = jobs[job_id]
+    results = job.get("results", [])
+
+    # Collect all class keys
+    class_keys: set = set()
+    for r in results:
+        if "class_ratios" in r:
+            class_keys.update(r["class_ratios"].keys())
+        if "object_counts" in r:
+            class_keys.update(r["object_counts"].keys())
+
+    # Build column-oriented data
+    columns = {
+        "image_id": [],
+        "latitude": [],
+        "longitude": [],
+        "analysis_type": [],
+    }
+    for k in sorted(class_keys):
+        columns[k] = []
+
+    for r in results:
+        columns["image_id"].append(r.get("image_id", ""))
+        columns["latitude"].append(r.get("latitude"))
+        columns["longitude"].append(r.get("longitude"))
+        columns["analysis_type"].append(
+            "segmentation" if "class_ratios" in r else "detection"
+        )
+        for k in sorted(class_keys):
+            val = None
+            if "class_ratios" in r:
+                val = r["class_ratios"].get(k)
+            elif "object_counts" in r:
+                val = r["object_counts"].get(k)
+            columns[k].append(val)
+
+    # Also build row-oriented for Vega-Lite `values` format
+    rows = []
+    for i in range(len(results)):
+        row = {}
+        for col_name, col_vals in columns.items():
+            row[col_name] = col_vals[i]
+        rows.append(row)
+
+    return {
+        "columns": columns,
+        "rows": rows,
+        "total": len(results),
+        "class_keys": sorted(class_keys),
+    }
+
+
 # Generic results route — MUST come after the specific sub-path routes above
 @router.get("/inference/results/{job_id}")
 async def get_inference_results(job_id: str):
@@ -221,6 +277,7 @@ async def get_inference_results(job_id: str):
         total_images=job["total_images"],
         processed=job["processed"],
         results=job["results"],
+        error=job.get("error"),
     )
 
 

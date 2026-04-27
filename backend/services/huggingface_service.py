@@ -53,15 +53,40 @@ def load_model(model_id: str, model_type: ModelType) -> str:
         return f"Model {model_id} already loaded (cached)"
 
     if model_type == ModelType.segmentation:
-        from transformers import AutoImageProcessor, AutoModelForSemanticSegmentation
+        from transformers import AutoImageProcessor
 
         token = settings.HUGGINGFACE_TOKEN or None
         processor = AutoImageProcessor.from_pretrained(
             model_id, token=token, cache_dir=settings.MODEL_CACHE_DIR,
         )
-        model = AutoModelForSemanticSegmentation.from_pretrained(
-            model_id, token=token, cache_dir=settings.MODEL_CACHE_DIR,
-        )
+
+        # Different segmentation architectures live under different Auto classes.
+        # Try the most specific first, fall back to the universal one.
+        # Order matters: SegFormer/BEiT/DPT/MaskFormer fit AutoModelForSemanticSegmentation;
+        # Mask2Former/OneFormer fit AutoModelForUniversalSegmentation.
+        import transformers as _tf
+        last_err = None
+        model = None
+        for auto_cls_name in (
+            "AutoModelForSemanticSegmentation",
+            "AutoModelForUniversalSegmentation",
+            "AutoModelForInstanceSegmentation",
+        ):
+            auto_cls = getattr(_tf, auto_cls_name, None)
+            if auto_cls is None:
+                continue
+            try:
+                model = auto_cls.from_pretrained(
+                    model_id, token=token, cache_dir=settings.MODEL_CACHE_DIR,
+                )
+                break
+            except Exception as e:
+                last_err = e
+                continue
+        if model is None:
+            raise RuntimeError(
+                f"Could not load segmentation model {model_id}: {last_err}"
+            )
         model.eval()
         _model_cache[model_id] = (model, processor, model_type)
 

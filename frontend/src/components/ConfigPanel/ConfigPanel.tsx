@@ -29,7 +29,6 @@ interface Props {
   jobStatus: JobStatus;
   onJobStatusChange: (s: JobStatus) => void;
   onResults: (r: ResultItem[]) => void;
-  demoMode: boolean;
 }
 
 function StepHeader({

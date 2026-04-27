@@ -1,18 +1,17 @@
 import os
-from typing import List, Optional
+from pathlib import Path
+from typing import List
 
-from fastapi import APIRouter, HTTPException
+import httpx
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from backend.config import settings
-from backend.services.mapillary_service import (
-    download_image,
+from backend.services.google_streetview_service import (
+    estimate_coverage,
     fetch_images_in_bbox,
-)
-
-SAMPLE_IMAGES_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "data", "sample_images")
+    get_image_url_by_pano,
 )
 
 router = APIRouter()
@@ -21,57 +20,101 @@ router = APIRouter()
 class BBoxRequest(BaseModel):
     bbox: List[float]
     limit: int = 100
-    start_date: Optional[str] = None
-    end_date: Optional[str] = None
 
 
 class FolderRequest(BaseModel):
     folder_path: str
 
 
-@router.post("/data/mapillary/fetch")
-async def fetch_mapillary_images(request: BBoxRequest):
+# ── Google Street View endpoints ─────────────────────────────────────
+
+@router.post("/data/streetview/fetch")
+async def fetch_streetview_images(request: BBoxRequest):
+    """Fetch Street View image metadata within a bounding box."""
+    api_key = settings.GOOGLE_MAPS_API_KEY
+    if not api_key:
+        raise HTTPException(
+            status_code=400,
+            detail="Google Maps API key required. Set GOOGLE_MAPS_API_KEY in .env",
+        )
     try:
         images = await fetch_images_in_bbox(
             bbox=request.bbox,
             limit=request.limit,
-            access_token=settings.MAPILLARY_ACCESS_TOKEN,
+            api_key=api_key,
         )
-        demo = not settings.MAPILLARY_ACCESS_TOKEN
-        return {"images": images, "count": len(images), "demo_mode": demo}
+        for img in images:
+            img["image_url"] = get_image_url_by_pano(
+                img["pano_id"], api_key, heading=0,
+            )
+        return {"images": images, "count": len(images)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/data/mapillary/image/{image_id}")
-async def get_mapillary_image(image_id: str):
-    try:
-        local_path = await download_image(
-            image_id=image_id,
-            access_token=settings.MAPILLARY_ACCESS_TOKEN,
-            cache_dir=settings.CACHE_DIR,
+@router.post("/data/streetview/coverage")
+async def get_streetview_coverage(request: BBoxRequest):
+    """Estimate Street View coverage in a bounding box (uses metadata API, no image quota)."""
+    api_key = settings.GOOGLE_MAPS_API_KEY
+    if not api_key:
+        raise HTTPException(
+            status_code=400,
+            detail="Google Maps API key required.",
         )
-        return {"image_id": image_id, "local_path": local_path}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/data/mapillary/coverage")
-async def get_mapillary_coverage(request: BBoxRequest):
     try:
-        images = await fetch_images_in_bbox(
+        estimated = await estimate_coverage(
             bbox=request.bbox,
-            limit=request.limit,
-            access_token=settings.MAPILLARY_ACCESS_TOKEN,
+            api_key=api_key,
         )
-        demo = not settings.MAPILLARY_ACCESS_TOKEN
         return {
             "bbox": request.bbox,
-            "estimated_count": len(images),
-            "demo_mode": demo,
+            "estimated_count": estimated,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/data/streetview/search_place")
+async def search_place(query: str = Query(..., min_length=1)):
+    """Geocode a place name and return a bbox suitable for Street View queries."""
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            "https://nominatim.openstreetmap.org/search",
+            params={"q": query, "format": "json", "limit": 1},
+            headers={"User-Agent": "StreetVisionNode/1.0"},
+        )
+        resp.raise_for_status()
+        results = resp.json()
+    if not results:
+        raise HTTPException(status_code=404, detail="Place not found")
+    place = results[0]
+    bbox = [float(place["boundingbox"][2]), float(place["boundingbox"][0]),
+            float(place["boundingbox"][3]), float(place["boundingbox"][1])]
+    return {
+        "name": place.get("display_name", query),
+        "bbox": bbox,
+        "lat": float(place["lat"]),
+        "lon": float(place["lon"]),
+    }
+
+
+# ── Folder endpoint ─────────────────────────────────────────────────
+
+_DATA_DIR = Path(__file__).resolve().parents[2] / "data"
+
+
+@router.get("/data/basemap/chicago_neighborhoods.geojson")
+async def get_chicago_neighborhoods():
+    """Serve the bundled Chicago neighborhoods GeoJSON for the Map View
+    Vega-Lite template's basemap layer. Static file; cached aggressively."""
+    path = _DATA_DIR / "chicago_neighborhoods.geojson"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Basemap not found")
+    return FileResponse(
+        path,
+        media_type="application/geo+json",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
 
 
 @router.post("/data/folder/load")
@@ -93,29 +136,3 @@ async def load_folder_images(request: FolderRequest):
             })
 
     return {"images": images, "count": len(images)}
-
-
-@router.get("/data/sample/list")
-async def list_sample_images():
-    """List available sample images from data/sample_images/."""
-    if not os.path.isdir(SAMPLE_IMAGES_DIR):
-        return {"images": [], "count": 0}
-    supported = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
-    images = []
-    for fname in sorted(os.listdir(SAMPLE_IMAGES_DIR)):
-        if os.path.splitext(fname)[1].lower() in supported:
-            images.append({
-                "image_id": fname,
-                "path": os.path.join(SAMPLE_IMAGES_DIR, fname),
-                "filename": fname,
-            })
-    return {"images": images, "count": len(images)}
-
-
-@router.get("/data/sample/image/{filename}")
-async def get_sample_image(filename: str):
-    """Serve a sample image file."""
-    path = os.path.join(SAMPLE_IMAGES_DIR, filename)
-    if not os.path.isfile(path):
-        raise HTTPException(status_code=404, detail="Image not found")
-    return FileResponse(path, media_type="image/jpeg")

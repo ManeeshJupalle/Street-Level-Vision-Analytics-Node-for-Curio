@@ -30,7 +30,6 @@ export default function ImageInspector({ item, modelType, onClose, onPrev, onNex
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose, onPrev, onNext]);
 
-  const isDemo = (item as any).demo_mode === true;
   const isSegmentation = 'class_ratios' in item;
   const isDetection = 'detections' in item;
 
@@ -38,7 +37,7 @@ export default function ImageInspector({ item, modelType, onClose, onPrev, onNex
     ? `${API_BASE}${item.image_url}`
     : item.image_url || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect fill='%23e2e8f0' width='600' height='400'/%3E%3Ctext x='50%25' y='50%25' fill='%2394a3b8' text-anchor='middle' dy='.3em' font-size='14'%3ENo image%3C/text%3E%3C/svg%3E`;
 
-  const overlayUrl = !isDemo && isSegmentation
+  const overlayUrl = isSegmentation
     ? `${API_URL}/inference/overlay/${encodeURIComponent(item.image_id)}`
     : null;
 
@@ -89,7 +88,7 @@ export default function ImageInspector({ item, modelType, onClose, onPrev, onNex
       {!overlayUrl && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/30">
           <span className="text-white text-sm font-medium bg-black/50 px-3 py-1.5 rounded-lg">
-            {isDemo ? 'Demo mode — no real overlay' : 'Overlay not available'}
+            Overlay not available
           </span>
         </div>
       )}
@@ -110,7 +109,7 @@ export default function ImageInspector({ item, modelType, onClose, onPrev, onNex
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-semibold text-gray-900">{item.image_id}</h2>
-              {!isDemo && isSegmentation && (
+              {isSegmentation && (
                 <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">
                   Real Inference
                 </span>

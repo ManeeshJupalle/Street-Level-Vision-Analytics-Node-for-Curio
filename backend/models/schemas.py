@@ -12,7 +12,7 @@ class ModelType(str, Enum):
 
 class DataSourceType(str, Enum):
     folder = "folder"
-    mapillary = "mapillary"
+    google_streetview = "google_streetview"
     url = "url"
 
 
@@ -65,3 +65,4 @@ class InferenceResponse(BaseModel):
     total_images: int = 0
     processed: int = 0
     results: List[dict] = []
+    error: Optional[str] = None

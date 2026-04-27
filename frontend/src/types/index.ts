@@ -1,5 +1,5 @@
 export type ModelType = 'segmentation' | 'detection' | 'classification';
-export type DataSourceType = 'folder' | 'mapillary' | 'url';
+export type DataSourceType = 'folder' | 'google_streetview' | 'url';
 
 export interface ModelSearchResult {
   model_id: string;
@@ -41,7 +41,6 @@ export interface SegmentationResult {
   latitude?: number;
   longitude?: number;
   class_ratios: Record<string, number>;
-  demo_mode?: boolean;
 }
 
 export interface DetectionResult {
@@ -51,7 +50,6 @@ export interface DetectionResult {
   longitude?: number;
   detections: Detection[];
   object_counts: Record<string, number>;
-  demo_mode?: boolean;
 }
 
 export interface Detection {
@@ -77,11 +75,10 @@ export interface FilterRule {
   value: number;
 }
 
-export interface MapillaryImage {
-  id: string;
+export interface StreetViewImage {
+  pano_id: string;
   latitude: number;
   longitude: number;
-  captured_at: string;
-  compass_angle?: number;
-  thumb_2048_url?: string;
+  date: string;
+  image_url?: string;
 }
