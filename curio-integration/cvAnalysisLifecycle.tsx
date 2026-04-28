@@ -233,7 +233,47 @@ export const useCvAnalysisLifecycle: BoxLifecycleHook = (data, _boxState) => {
     };
   }, [results]);
 
-  const pushDownstream = useCallback(() => {
+  // Best-effort enrichment: tag each point with its Chicago neighborhood and
+  // attach per-neighborhood aggregates (used by the Map View polygon coloring
+  // and the Linked template's vconcat). Falls back gracefully — if the
+  // endpoint is down or the points are outside Chicago, we still push the
+  // base FC so Vega-Lite + Table keep working.
+  const enrichWithNeighborhoods = useCallback(async (fc: any) => {
+    const points = fc.features.map((f: any) => ({
+      latitude: f.properties?.latitude ?? null,
+      longitude: f.properties?.longitude ?? null,
+      image_id: f.properties?.image_id ?? null,
+      dominant_class: f.properties?.dominant_class ?? null,
+      dominant_pct: f.properties?.dominant_pct ?? null,
+    }));
+    try {
+      const res = await fetch(`${API_BASE}/data/basemap/enrich_with_neighborhoods`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ points }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const body = await res.json();
+      const enriched = body.points || [];
+      fc.features.forEach((f: any, i: number) => {
+        const e = enriched[i];
+        if (!e) return;
+        f.properties.neighborhood_name = e.neighborhood_name ?? null;
+        f.properties.nbhd_dominant_class = e.nbhd_dominant_class ?? null;
+        f.properties.nbhd_dominant_pct = e.nbhd_dominant_pct ?? null;
+        f.properties.nbhd_image_count = e.nbhd_image_count ?? null;
+      });
+      // Stash aggregates on metadata for any downstream consumer that wants them.
+      fc.metadata = { ...(fc.metadata || {}), aggregates: body.aggregates || [] };
+      return fc;
+    } catch (err: any) {
+      // Silent fallback — Map View polygons will just stay flat-fill,
+      // bar/table still render fine.
+      return fc;
+    }
+  }, []);
+
+  const pushDownstream = useCallback(async () => {
     if (!payload) return;
     setPushError(null);
 
@@ -242,15 +282,17 @@ export const useCvAnalysisLifecycle: BoxLifecycleHook = (data, _boxState) => {
     // parsedOutput.data.features) consume this shape directly — no .data
     // file write or fetch round-trip needed at our scale (≤200 rows).
     try {
+      const fc = buildFeatureCollection();
+      const enriched = await enrichWithNeighborhoods(fc);
       data.outputCallback(data.nodeId, {
-        data: buildFeatureCollection(),
+        data: enriched,
         dataType: 'geodataframe',
       });
       setPushed(true);
     } catch (e: any) {
       setPushError(`Push failed: ${e.message}`);
     }
-  }, [payload, data, buildFeatureCollection]);
+  }, [payload, data, buildFeatureCollection, enrichWithNeighborhoods]);
 
   // ── Inspected item ──────────────────────────────────────────────────
   const inspectedItem = inspectIdx !== null ? results[inspectIdx] : null;
