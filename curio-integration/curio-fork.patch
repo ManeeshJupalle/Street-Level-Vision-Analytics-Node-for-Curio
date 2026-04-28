@@ -1069,10 +1069,10 @@ index fc7b5d5..bc0e732 100644
  
      return (
 diff --git a/utk_curio/frontend/urban-workflows/src/providers/templates.ts b/utk_curio/frontend/urban-workflows/src/providers/templates.ts
-index d6b4500..bc9a11e 100644
+index d6b4500..c76ee8b 100644
 --- a/utk_curio/frontend/urban-workflows/src/providers/templates.ts
 +++ b/utk_curio/frontend/urban-workflows/src/providers/templates.ts
-@@ -1,152 +1,283 @@
+@@ -1,152 +1,394 @@
 -import { useEffect, useState } from "react";
 +import { v4 as uuid } from "uuid";
 +import { AccessLevelType, BoxType } from "../constants";
@@ -1305,6 +1305,30 @@ index d6b4500..bc9a11e 100644
 +  legend: { labelFont: SHARED_FONTS, titleFont: SHARED_FONTS },
 +  title: { font: SHARED_FONTS, subtitleFont: SHARED_FONTS },
 +};
++
++// ══════════════════════════════════════════════════════════════════════
++// TEMPLATE 1 — Map View (only template; analytic polygons + auto-fit)
++// ══════════════════════════════════════════════════════════════════════
++//
++// Mercator projection without explicit scale/center means Vega-Lite
++// auto-fits to the union of all geo data — and since the basemap covers
++// every Chicago neighborhood, the full city footprint is always visible
++// regardless of where the user's queried points fall. Searched
++// neighborhoods light up in their dominant Cityscapes color; the rest of
++// Chicago stays as faint slate outlines so the city silhouette reads
++// clearly.
++const STREET_VISION_MAP_VIEW = {
++  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
++  title: titleBlock(
++    "Street Vision — Map View",
++    "Polygons: dominant class per neighborhood · Points: per-image dominant class & %",
++  ),
++  background: "#ffffff",
++  padding: { left: 16, right: 16, top: 10, bottom: 10 },
++  projection: { type: "mercator" },
++  layer: [polygonLayer("data"), labelLayer("data"), pointLayer()],
++  config: SHARED_CONFIG,
++};
  
 -// export const templates = [
 -//     {
@@ -1439,26 +1463,101 @@ index d6b4500..bc9a11e 100644
 -//     },
 -// ];
 +// ══════════════════════════════════════════════════════════════════════
-+// TEMPLATE 1 — Map View (only template; analytic polygons + auto-fit)
++// TEMPLATE 2 — Neighborhood Summary (high-volume bar alternative)
 +// ══════════════════════════════════════════════════════════════════════
 +//
-+// Mercator projection without explicit scale/center means Vega-Lite
-+// auto-fits to the union of all geo data — and since the basemap covers
-+// every Chicago neighborhood, the full city footprint is always visible
-+// regardless of where the user's queried points fall. Searched
-+// neighborhoods light up in their dominant Cityscapes color; the rest of
-+// Chicago stays as faint slate outlines so the city silhouette reads
-+// clearly.
-+const STREET_VISION_MAP_VIEW = {
++// At 100+ images, the per-image stacked bar (vegaLifecycle DEFAULT_SPEC)
++// becomes unreadable — bars are 4 px wide and X labels overlap. This
++// template trades per-image granularity for spatial roll-up: one
++// horizontal bar per neighborhood, length = images sampled, color =
++// dominant Cityscapes class. Scales cleanly to any sample size because
++// Chicago has only ~98 neighborhoods total.
++//
++// Aggregation works because the backend's enrich_with_neighborhoods
++// endpoint stamps every point in a neighborhood with the SAME
++// `nbhd_dominant_class` / `nbhd_dominant_pct` values — so taking
++// `min` of those constant fields after a `groupby: neighborhood_name`
++// trivially recovers the per-neighborhood value.
++const STREET_VISION_NBHD_SUMMARY = {
 +  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
 +  title: titleBlock(
-+    "Street Vision — Map View",
-+    "Polygons: dominant class per neighborhood · Points: per-image dominant class & %",
++    "Street Vision — Neighborhood Summary",
++    "Per-neighborhood image counts, colored by dominant Cityscapes class",
 +  ),
 +  background: "#ffffff",
-+  padding: { left: 16, right: 16, top: 10, bottom: 10 },
-+  projection: { type: "mercator" },
-+  layer: [polygonLayer("data"), labelLayer("data"), pointLayer()],
++  padding: { left: 16, right: 16, top: 10, bottom: 14 },
++  transform: [
++    { filter: "datum.neighborhood_name != null" },
++    {
++      aggregate: [
++        { op: "count", as: "image_count" },
++        { op: "min", field: "nbhd_dominant_class", as: "dominant_class" },
++        { op: "min", field: "nbhd_dominant_pct", as: "dominant_pct" },
++      ],
++      groupby: ["neighborhood_name"],
++    },
++  ],
++  mark: {
++    type: "bar",
++    cornerRadiusEnd: 6,
++    stroke: "#ffffff",
++    strokeWidth: 1.5,
++  },
++  encoding: {
++    y: {
++      field: "neighborhood_name",
++      type: "nominal",
++      sort: { op: "max", field: "image_count", order: "descending" },
++      axis: {
++        title: null,
++        labelFontSize: 12,
++        labelColor: "#334155",
++        domainOpacity: 0,
++        tickOpacity: 0,
++        labelPadding: 8,
++      },
++    },
++    x: {
++      field: "image_count",
++      type: "quantitative",
++      axis: {
++        title: "Images sampled",
++        titleFontSize: 12,
++        titleColor: "#475569",
++        titleFontWeight: 500,
++        titlePadding: 10,
++        labelFontSize: 11,
++        labelColor: "#94a3b8",
++        gridColor: "#f1f5f9",
++        domainOpacity: 0,
++        tickOpacity: 0,
++        format: "d",
++      },
++    },
++    color: {
++      field: "dominant_class",
++      type: "nominal",
++      scale: { domain: CITYSCAPES_CLASSES, range: CITYSCAPES_COLORS },
++      legend: {
++        title: "Dominant class",
++        titleFontSize: 12,
++        titleColor: "#475569",
++        orient: "right",
++        symbolType: "circle",
++        symbolSize: 120,
++        labelFontSize: 12,
++        labelColor: "#334155",
++        offset: 14,
++        rowPadding: 4,
++      },
++    },
++    tooltip: [
++      { field: "neighborhood_name", type: "nominal", title: "Neighborhood" },
++      { field: "image_count", type: "quantitative", title: "Images" },
++      { field: "dominant_class", type: "nominal", title: "Dominant class" },
++      { field: "dominant_pct", type: "quantitative", format: ".1f", title: "Dominant %" },
++    ],
++  },
 +  config: SHARED_CONFIG,
 +};
  
@@ -1486,6 +1585,18 @@ index d6b4500..bc9a11e 100644
 +      "Connect to CV Analysis output.",
 +    accessLevel: AccessLevelType.ANY,
 +    code: JSON.stringify(STREET_VISION_MAP_VIEW, null, 2),
++    custom: false,
++  },
++  {
++    id: uuid(),
++    type: BoxType.VIS_VEGA,
++    name: "Street Vision — Neighborhood Summary",
++    description:
++      "Horizontal bars: one per Chicago neighborhood, length = images " +
++      "sampled, color = dominant Cityscapes class. Use this instead of " +
++      "the per-image stacked bar when sample size is large (50+ images).",
++    accessLevel: AccessLevelType.ANY,
++    code: JSON.stringify(STREET_VISION_NBHD_SUMMARY, null, 2),
 +    custom: false,
 +  },
 +];
