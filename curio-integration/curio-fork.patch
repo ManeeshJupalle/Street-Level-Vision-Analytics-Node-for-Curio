@@ -1,4 +1,3 @@
-warning: in the working copy of 'utk_curio/frontend/urban-workflows/src/providers/templates.ts', LF will be replaced by CRLF the next time Git touches it
 diff --git a/requirements.txt b/requirements.txt
 index 4430223..9b1d9d6 100644
 --- a/requirements.txt
@@ -68,6 +67,595 @@ index 50da160..3f6083e 100644
      if not app.debug and not app.testing:
          if app.config['LOG_TO_STDOUT']:
              stream_handler = logging.StreamHandler()
+diff --git a/utk_curio/frontend/urban-workflows/package-lock.json b/utk_curio/frontend/urban-workflows/package-lock.json
+index 3fbe747..28ad7d8 100644
+--- a/utk_curio/frontend/urban-workflows/package-lock.json
++++ b/utk_curio/frontend/urban-workflows/package-lock.json
+@@ -112,6 +112,7 @@
+       "version": "7.23.9",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "@ampproject/remapping": "^2.2.0",
+         "@babel/code-frame": "^7.23.5",
+@@ -1955,6 +1956,7 @@
+     "node_modules/@emotion/react": {
+       "version": "11.11.3",
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "@babel/runtime": "^7.18.3",
+         "@emotion/babel-plugin": "^11.11.0",
+@@ -1992,6 +1994,7 @@
+     "node_modules/@emotion/styled": {
+       "version": "11.11.0",
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "@babel/runtime": "^7.18.3",
+         "@emotion/babel-plugin": "^11.11.0",
+@@ -2234,6 +2237,7 @@
+       "version": "6.5.1",
+       "hasInstallScript": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "@fortawesome/fontawesome-common-types": "6.5.1"
+       },
+@@ -3307,6 +3311,7 @@
+     "node_modules/@popperjs/core": {
+       "version": "2.11.8",
+       "license": "MIT",
++      "peer": true,
+       "funding": {
+         "type": "opencollective",
+         "url": "https://opencollective.com/popperjs"
+@@ -3877,8 +3882,7 @@
+     },
+     "node_modules/@tweenjs/tween.js": {
+       "version": "23.1.1",
+-      "license": "MIT",
+-      "peer": true
++      "license": "MIT"
+     },
+     "node_modules/@types/aria-query": {
+       "version": "5.0.4",
+@@ -4451,6 +4455,7 @@
+     "node_modules/@types/react": {
+       "version": "18.2.51",
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "@types/prop-types": "*",
+         "@types/scheduler": "*",
+@@ -4534,8 +4539,7 @@
+     },
+     "node_modules/@types/stats.js": {
+       "version": "0.17.3",
+-      "license": "MIT",
+-      "peer": true
++      "license": "MIT"
+     },
+     "node_modules/@types/testing-library__jest-dom": {
+       "version": "5.14.9",
+@@ -4635,6 +4639,7 @@
+       "version": "8.23.0",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "@typescript-eslint/scope-manager": "8.23.0",
+         "@typescript-eslint/types": "8.23.0",
+@@ -5097,6 +5102,7 @@
+       "version": "8.14.0",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "bin": {
+         "acorn": "bin/acorn"
+       },
+@@ -5187,6 +5193,7 @@
+     "node_modules/ajv": {
+       "version": "6.12.6",
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "fast-deep-equal": "^3.1.1",
+         "fast-json-stable-stringify": "^2.0.0",
+@@ -5578,6 +5585,7 @@
+       "version": "8.12.0",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "fast-deep-equal": "^3.1.1",
+         "json-schema-traverse": "^1.0.0",
+@@ -5900,6 +5908,7 @@
+         }
+       ],
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "caniuse-lite": "^1.0.30001688",
+         "electron-to-chromium": "^1.5.73",
+@@ -6623,7 +6632,6 @@
+     "node_modules/d3-delaunay": {
+       "version": "6.0.4",
+       "license": "ISC",
+-      "peer": true,
+       "dependencies": {
+         "delaunator": "5"
+       },
+@@ -6654,7 +6662,6 @@
+     "node_modules/d3-dsv": {
+       "version": "3.0.1",
+       "license": "ISC",
+-      "peer": true,
+       "dependencies": {
+         "commander": "7",
+         "iconv-lite": "0.6",
+@@ -6678,7 +6685,6 @@
+     "node_modules/d3-dsv/node_modules/commander": {
+       "version": "7.2.0",
+       "license": "MIT",
+-      "peer": true,
+       "engines": {
+         "node": ">= 10"
+       }
+@@ -6686,7 +6692,6 @@
+     "node_modules/d3-dsv/node_modules/iconv-lite": {
+       "version": "0.6.3",
+       "license": "MIT",
+-      "peer": true,
+       "dependencies": {
+         "safer-buffer": ">= 2.1.2 < 3.0.0"
+       },
+@@ -6706,7 +6711,6 @@
+     "node_modules/d3-force": {
+       "version": "3.0.0",
+       "license": "ISC",
+-      "peer": true,
+       "dependencies": {
+         "d3-dispatch": "1 - 3",
+         "d3-quadtree": "1 - 3",
+@@ -6740,7 +6744,6 @@
+     "node_modules/d3-geo": {
+       "version": "3.1.0",
+       "license": "ISC",
+-      "peer": true,
+       "dependencies": {
+         "d3-array": "2.5.0 - 3"
+       },
+@@ -6751,7 +6754,6 @@
+     "node_modules/d3-geo-projection": {
+       "version": "4.0.0",
+       "license": "ISC",
+-      "peer": true,
+       "dependencies": {
+         "commander": "7",
+         "d3-array": "1 - 3",
+@@ -6771,7 +6773,6 @@
+     "node_modules/d3-geo-projection/node_modules/commander": {
+       "version": "7.2.0",
+       "license": "MIT",
+-      "peer": true,
+       "engines": {
+         "node": ">= 10"
+       }
+@@ -6800,7 +6801,6 @@
+     "node_modules/d3-path": {
+       "version": "3.1.0",
+       "license": "ISC",
+-      "peer": true,
+       "engines": {
+         "node": ">=12"
+       }
+@@ -6831,6 +6831,7 @@
+       "resolved": "https://registry.npmjs.org/d3-selection/-/d3-selection-3.0.0.tgz",
+       "integrity": "sha512-fmTRWbNMmsmWq6xJV8D19U/gw/bwrHfNXxrIN+HfZgnzqTHp9jOmKMhsTUjXOJnZOdZY9Q28y4yebKzqDKlxlQ==",
+       "license": "ISC",
++      "peer": true,
+       "engines": {
+         "node": ">=12"
+       }
+@@ -6838,7 +6839,6 @@
+     "node_modules/d3-shape": {
+       "version": "3.2.0",
+       "license": "ISC",
+-      "peer": true,
+       "dependencies": {
+         "d3-path": "^3.1.0"
+       },
+@@ -7157,7 +7157,6 @@
+     "node_modules/delaunator": {
+       "version": "5.0.1",
+       "license": "ISC",
+-      "peer": true,
+       "dependencies": {
+         "robust-predicates": "^3.0.2"
+       }
+@@ -7737,6 +7736,7 @@
+       "version": "9.19.0",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "@eslint-community/eslint-utils": "^4.2.0",
+         "@eslint-community/regexpp": "^4.12.1",
+@@ -12557,8 +12557,7 @@
+     },
+     "node_modules/meshoptimizer": {
+       "version": "0.18.1",
+-      "license": "MIT",
+-      "peer": true
++      "license": "MIT"
+     },
+     "node_modules/methods": {
+       "version": "1.1.2",
+@@ -13122,7 +13121,8 @@
+     },
+     "node_modules/monaco-editor": {
+       "version": "0.45.0",
+-      "license": "MIT"
++      "license": "MIT",
++      "peer": true
+     },
+     "node_modules/ms": {
+       "version": "2.0.0",
+@@ -13188,7 +13188,6 @@
+     "node_modules/node-fetch": {
+       "version": "2.7.0",
+       "license": "MIT",
+-      "peer": true,
+       "dependencies": {
+         "whatwg-url": "^5.0.0"
+       },
+@@ -13710,6 +13709,7 @@
+         }
+       ],
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "nanoid": "^3.3.7",
+         "picocolors": "^1.0.0",
+@@ -14031,6 +14031,7 @@
+     "node_modules/react": {
+       "version": "18.2.0",
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "loose-envify": "^1.1.0"
+       },
+@@ -14079,6 +14080,7 @@
+     "node_modules/react-dom": {
+       "version": "18.2.0",
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "loose-envify": "^1.1.0",
+         "scheduler": "^0.23.0"
+@@ -14580,8 +14582,7 @@
+     },
+     "node_modules/robust-predicates": {
+       "version": "3.0.2",
+-      "license": "Unlicense",
+-      "peer": true
++      "license": "Unlicense"
+     },
+     "node_modules/run-parallel": {
+       "version": "1.2.0",
+@@ -14607,8 +14608,7 @@
+     },
+     "node_modules/rw": {
+       "version": "1.3.3",
+-      "license": "BSD-3-Clause",
+-      "peer": true
++      "license": "BSD-3-Clause"
+     },
+     "node_modules/safe-array-concat": {
+       "version": "1.1.3",
+@@ -15651,7 +15651,8 @@
+     },
+     "node_modules/three": {
+       "version": "0.154.0",
+-      "license": "MIT"
++      "license": "MIT",
++      "peer": true
+     },
+     "node_modules/three-mesh-bvh": {
+       "version": "0.7.3",
+@@ -15716,7 +15717,6 @@
+     "node_modules/topojson-client": {
+       "version": "3.1.0",
+       "license": "ISC",
+-      "peer": true,
+       "dependencies": {
+         "commander": "2"
+       },
+@@ -15744,8 +15744,7 @@
+     },
+     "node_modules/tr46": {
+       "version": "0.0.3",
+-      "license": "MIT",
+-      "peer": true
++      "license": "MIT"
+     },
+     "node_modules/trim-lines": {
+       "version": "3.0.1",
+@@ -15942,6 +15941,7 @@
+     "node_modules/typescript": {
+       "version": "5.7.3",
+       "license": "Apache-2.0",
++      "peer": true,
+       "bin": {
+         "tsc": "bin/tsc",
+         "tsserver": "bin/tsserver"
+@@ -16344,13 +16344,11 @@
+     },
+     "node_modules/vega-canvas": {
+       "version": "1.2.7",
+-      "license": "BSD-3-Clause",
+-      "peer": true
++      "license": "BSD-3-Clause"
+     },
+     "node_modules/vega-crossfilter": {
+       "version": "4.1.1",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "d3-array": "^3.2.2",
+         "vega-dataflow": "^5.7.5",
+@@ -16360,7 +16358,6 @@
+     "node_modules/vega-dataflow": {
+       "version": "5.7.5",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "vega-format": "^1.1.1",
+         "vega-loader": "^4.5.1",
+@@ -16370,7 +16367,6 @@
+     "node_modules/vega-encode": {
+       "version": "4.9.2",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "d3-array": "^3.2.2",
+         "d3-interpolate": "^3.0.1",
+@@ -16394,7 +16390,6 @@
+     "node_modules/vega-force": {
+       "version": "4.2.0",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "d3-force": "^3.0.0",
+         "vega-dataflow": "^5.7.5",
+@@ -16404,7 +16399,6 @@
+     "node_modules/vega-format": {
+       "version": "1.1.1",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "d3-array": "^3.2.2",
+         "d3-format": "^3.1.0",
+@@ -16416,7 +16410,6 @@
+     "node_modules/vega-functions": {
+       "version": "5.14.0",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "d3-array": "^3.2.2",
+         "d3-color": "^3.1.0",
+@@ -16434,7 +16427,6 @@
+     "node_modules/vega-geo": {
+       "version": "4.4.1",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "d3-array": "^3.2.2",
+         "d3-color": "^3.1.0",
+@@ -16449,7 +16441,6 @@
+     "node_modules/vega-hierarchy": {
+       "version": "4.1.1",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "d3-hierarchy": "^3.1.2",
+         "vega-dataflow": "^5.7.5",
+@@ -16459,7 +16450,6 @@
+     "node_modules/vega-label": {
+       "version": "1.2.1",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "vega-canvas": "^1.2.6",
+         "vega-dataflow": "^5.7.3",
+@@ -16494,7 +16484,6 @@
+     "node_modules/vega-loader": {
+       "version": "4.5.1",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "d3-dsv": "^3.0.1",
+         "node-fetch": "^2.6.7",
+@@ -16506,7 +16495,6 @@
+     "node_modules/vega-parser": {
+       "version": "6.2.1",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "vega-dataflow": "^5.7.5",
+         "vega-event-selector": "^3.0.1",
+@@ -16518,7 +16506,6 @@
+     "node_modules/vega-projection": {
+       "version": "1.6.0",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "d3-geo": "^3.1.0",
+         "d3-geo-projection": "^4.0.0",
+@@ -16528,7 +16515,6 @@
+     "node_modules/vega-regression": {
+       "version": "1.2.0",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "d3-array": "^3.2.2",
+         "vega-dataflow": "^5.7.3",
+@@ -16539,7 +16525,6 @@
+     "node_modules/vega-runtime": {
+       "version": "6.1.4",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "vega-dataflow": "^5.7.5",
+         "vega-util": "^1.17.1"
+@@ -16548,7 +16533,6 @@
+     "node_modules/vega-scale": {
+       "version": "7.3.1",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "d3-array": "^3.2.2",
+         "d3-interpolate": "^3.0.1",
+@@ -16560,7 +16544,6 @@
+     "node_modules/vega-scenegraph": {
+       "version": "4.11.2",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "d3-path": "^3.1.0",
+         "d3-shape": "^3.2.0",
+@@ -16573,7 +16556,6 @@
+     "node_modules/vega-selections": {
+       "version": "5.4.2",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "d3-array": "3.2.4",
+         "vega-expression": "^5.0.1",
+@@ -16583,7 +16565,6 @@
+     "node_modules/vega-statistics": {
+       "version": "1.9.0",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "d3-array": "^3.2.2"
+       }
+@@ -16591,7 +16572,6 @@
+     "node_modules/vega-time": {
+       "version": "2.1.1",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "d3-array": "^3.2.2",
+         "d3-time": "^3.1.0",
+@@ -16601,7 +16581,6 @@
+     "node_modules/vega-transforms": {
+       "version": "4.11.1",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "d3-array": "^3.2.2",
+         "vega-dataflow": "^5.7.5",
+@@ -16613,7 +16592,6 @@
+     "node_modules/vega-typings": {
+       "version": "1.1.0",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "@types/geojson": "7946.0.4",
+         "vega-event-selector": "^3.0.1",
+@@ -16623,8 +16601,7 @@
+     },
+     "node_modules/vega-typings/node_modules/@types/geojson": {
+       "version": "7946.0.4",
+-      "license": "MIT",
+-      "peer": true
++      "license": "MIT"
+     },
+     "node_modules/vega-util": {
+       "version": "1.17.2",
+@@ -16633,7 +16610,6 @@
+     "node_modules/vega-view": {
+       "version": "5.12.0",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "d3-array": "^3.2.2",
+         "d3-timer": "^3.0.1",
+@@ -16648,7 +16624,6 @@
+     "node_modules/vega-view-transforms": {
+       "version": "4.5.9",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "vega-dataflow": "^5.7.5",
+         "vega-scenegraph": "^4.10.2",
+@@ -16658,7 +16633,6 @@
+     "node_modules/vega-voronoi": {
+       "version": "4.2.2",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "d3-delaunay": "^6.0.2",
+         "vega-dataflow": "^5.7.5",
+@@ -16668,7 +16642,6 @@
+     "node_modules/vega-wordcloud": {
+       "version": "4.1.4",
+       "license": "BSD-3-Clause",
+-      "peer": true,
+       "dependencies": {
+         "vega-canvas": "^1.2.7",
+         "vega-dataflow": "^5.7.5",
+@@ -16775,13 +16748,13 @@
+     },
+     "node_modules/webidl-conversions": {
+       "version": "3.0.1",
+-      "license": "BSD-2-Clause",
+-      "peer": true
++      "license": "BSD-2-Clause"
+     },
+     "node_modules/webpack": {
+       "version": "5.97.1",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "@types/eslint-scope": "^3.7.7",
+         "@types/estree": "^1.0.6",
+@@ -16827,6 +16800,7 @@
+       "version": "5.1.4",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "@discoveryjs/json-ext": "^0.5.0",
+         "@webpack-cli/configtest": "^2.1.1",
+@@ -16901,6 +16875,7 @@
+       "version": "8.12.0",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "fast-deep-equal": "^3.1.1",
+         "json-schema-traverse": "^1.0.0",
+@@ -17008,6 +16983,7 @@
+       "version": "8.12.0",
+       "dev": true,
+       "license": "MIT",
++      "peer": true,
+       "dependencies": {
+         "fast-deep-equal": "^3.1.1",
+         "json-schema-traverse": "^1.0.0",
+@@ -17115,7 +17091,6 @@
+     "node_modules/whatwg-url": {
+       "version": "5.0.0",
+       "license": "MIT",
+-      "peer": true,
+       "dependencies": {
+         "tr46": "~0.0.3",
+         "webidl-conversions": "^3.0.0"
 diff --git a/utk_curio/frontend/urban-workflows/src/adapters/box/index.ts b/utk_curio/frontend/urban-workflows/src/adapters/box/index.ts
 index 87be27e..351cad5 100644
 --- a/utk_curio/frontend/urban-workflows/src/adapters/box/index.ts
@@ -82,10 +670,10 @@ index 87be27e..351cad5 100644
  export { standardInOut, outputOnly, inputOnly, withBidirectional, flowSwitchHandles } from './handleHelpers';
  
 diff --git a/utk_curio/frontend/urban-workflows/src/adapters/box/vegaLifecycle.ts b/utk_curio/frontend/urban-workflows/src/adapters/box/vegaLifecycle.ts
-index 106d4ab..fc3dda8 100644
+index 106d4ab..d02899f 100644
 --- a/utk_curio/frontend/urban-workflows/src/adapters/box/vegaLifecycle.ts
 +++ b/utk_curio/frontend/urban-workflows/src/adapters/box/vegaLifecycle.ts
-@@ -1,6 +1,134 @@
+@@ -1,6 +1,139 @@
  import { BoxLifecycleHook } from '../../registry/types';
  import { useVega } from '../../hook/useVega';
  
@@ -203,10 +791,15 @@ index 106d4ab..fc3dda8 100644
 +    tooltip: [
 +      { field: "image_idx", type: "quantitative", title: "Image #", format: "d" },
 +      { field: "image_id", type: "nominal", title: "ID" },
++      { field: "neighborhood_name", type: "nominal", title: "Neighborhood" },
 +      { field: "longitude", type: "quantitative", title: "Lon", format: ".5f" },
 +      { field: "latitude", type: "quantitative", title: "Lat", format: ".5f" },
 +      { field: "class", type: "nominal", title: "Class" },
 +      { field: "ratio", type: "quantitative", title: "Ratio (%)", format: ".1f" },
++      { field: "road", type: "quantitative", title: "Road %", format: ".1f" },
++      { field: "building", type: "quantitative", title: "Building %", format: ".1f" },
++      { field: "sidewalk", type: "quantitative", title: "Sidewalk %", format: ".1f" },
++      { field: "vegetation", type: "quantitative", title: "Veg %", format: ".1f" },
 +    ],
 +  },
 +  config: {
@@ -220,7 +813,7 @@ index 106d4ab..fc3dda8 100644
  export const useVegaLifecycle: BoxLifecycleHook = (data, boxState) => {
    const { handleCompileGrammar } = useVega({ data, code: boxState.code });
  
-@@ -14,5 +142,12 @@ export const useVegaLifecycle: BoxLifecycleHook = (data, boxState) => {
+@@ -14,5 +147,12 @@ export const useVegaLifecycle: BoxLifecycleHook = (data, boxState) => {
      }
    };
  
@@ -356,6 +949,34 @@ index 9983d11..80def70 100644
    }, []);
  
    const dataInputBypass = useRef(false);
+diff --git a/utk_curio/frontend/urban-workflows/src/index.tsx b/utk_curio/frontend/urban-workflows/src/index.tsx
+index 362c982..c07bb48 100644
+--- a/utk_curio/frontend/urban-workflows/src/index.tsx
++++ b/utk_curio/frontend/urban-workflows/src/index.tsx
+@@ -3,6 +3,23 @@ import ReactDOM from "react-dom/client";
+ import * as monaco from "monaco-editor";
+ import { loader } from "@monaco-editor/react";
+ 
++// Suppress the benign "ResizeObserver loop completed with undelivered
++// notifications" error that webpack-dev-server's overlay catches when
++// Vega-Lite resizes its container during render. The chart renders fine;
++// the popup is purely dev-mode noise that obscures the canvas.
++const RESIZE_OBSERVER_RE = /ResizeObserver loop completed with undelivered notifications/;
++window.addEventListener("error", (e) => {
++  if (RESIZE_OBSERVER_RE.test(e.message)) {
++    e.stopImmediatePropagation();
++    e.preventDefault();
++  }
++});
++window.addEventListener("unhandledrejection", (e) => {
++  if (e.reason && RESIZE_OBSERVER_RE.test(String(e.reason.message ?? e.reason))) {
++    e.preventDefault();
++  }
++});
++
+ // Use bundled Monaco instead of CDN so the editor works offline
+ loader.config({ monaco });
+ // Expose on window for tests and any code that uses window.monaco (e.g. getEditors())
 diff --git a/utk_curio/frontend/urban-workflows/src/providers/ProvenanceProvider.tsx b/utk_curio/frontend/urban-workflows/src/providers/ProvenanceProvider.tsx
 index fc7b5d5..bc0e732 100644
 --- a/utk_curio/frontend/urban-workflows/src/providers/ProvenanceProvider.tsx
@@ -448,16 +1069,23 @@ index fc7b5d5..bc0e732 100644
  
      return (
 diff --git a/utk_curio/frontend/urban-workflows/src/providers/templates.ts b/utk_curio/frontend/urban-workflows/src/providers/templates.ts
-index d6b4500..0bb5668 100644
+index d6b4500..bc9a11e 100644
 --- a/utk_curio/frontend/urban-workflows/src/providers/templates.ts
 +++ b/utk_curio/frontend/urban-workflows/src/providers/templates.ts
-@@ -1,152 +1,138 @@
+@@ -1,152 +1,283 @@
 -import { useEffect, useState } from "react";
 +import { v4 as uuid } from "uuid";
 +import { AccessLevelType, BoxType } from "../constants";
-+
-+// Built-in templates that ship with Curio for the Street Vision pipeline.
-+// Each one is selectable via the "Templates" dropdown inside its target node.
+ 
+-export default async function useTemplates() {
+-    try{
+-        const response = await fetch(process.env.BACKEND_URL + '/templates');
+-        if (!response.ok) {
+-          throw new Error(`HTTP error! status: ${response.status}`);
++// ── Shared scale ───────────────────────────────────────────────────────
++// CITYSCAPES_CLASSES + CITYSCAPES_COLORS are reused across all three Vega-Lite
++// templates so map polygons, point markers, and bar segments stay visually
++// consistent (a building region looks the same green everywhere).
 +const CITYSCAPES_CLASSES = [
 +  "road", "sidewalk", "building", "vegetation",
 +  "wall", "fence", "pole", "traffic sign",
@@ -473,135 +1101,211 @@ index d6b4500..0bb5668 100644
 +const CHICAGO_NEIGHBORHOODS_URL =
 +  "http://localhost:5002/api/streetvision/data/basemap/chicago_neighborhoods.geojson";
 +
-+const STREET_VISION_MAP_VIEW = {
-+  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-+  title: {
-+    text: "Street Vision — Map View",
-+    subtitle: "Chicago neighborhoods · color = dominant class · size = dominant %",
-+    anchor: "start",
-+    fontSize: 22,
-+    fontWeight: 700,
-+    subtitleFontSize: 13,
-+    subtitleColor: "#64748b",
-+    subtitlePadding: 6,
-+    color: "#0f172a",
-+    offset: 14,
++const SHARED_FONTS = "Inter, system-ui, sans-serif";
++
++// ── Helpers shared by every template ───────────────────────────────────
++const titleBlock = (text: string, subtitle: string) => ({
++  text,
++  subtitle,
++  anchor: "start",
++  fontSize: 22,
++  fontWeight: 700,
++  subtitleFontSize: 13,
++  subtitleColor: "#64748b",
++  subtitlePadding: 6,
++  color: "#0f172a",
++  offset: 14,
++});
++
++// Point tooltip used in both standalone Map View and the Linked Map+Bars view.
++// Includes neighborhood + a breakdown of the four most-common classes (per
++// Priority 3). The id is truncated for display; the full one is in the data.
++const POINT_TOOLTIP = [
++  { field: "id_short", type: "nominal", title: "Image" },
++  { field: "neighborhood_name", type: "nominal", title: "Neighborhood" },
++  { field: "latitude", type: "quantitative", format: ".5f", title: "Lat" },
++  { field: "longitude", type: "quantitative", format: ".5f", title: "Lon" },
++  { field: "dominant_class", type: "nominal", title: "Top class" },
++  { field: "dominant_pct", type: "quantitative", format: ".1f", title: "Top %" },
++  { field: "road", type: "quantitative", format: ".1f", title: "Road %" },
++  { field: "building", type: "quantitative", format: ".1f", title: "Building %" },
++  { field: "sidewalk", type: "quantitative", format: ".1f", title: "Sidewalk %" },
++  { field: "vegetation", type: "quantitative", format: ".1f", title: "Veg %" },
++];
++
++// Polygon tooltip — only the basemap layer uses this. Pulls the per-neighborhood
++// aggregates that the backend's /enrich_with_neighborhoods endpoint joined onto
++// each point and that we then `lookup` back from the basemap.
++const POLYGON_TOOLTIP = [
++  { field: "properties.name", type: "nominal", title: "Neighborhood" },
++  { field: "nbhd_image_count", type: "quantitative", title: "Images" },
++  { field: "nbhd_dominant_class", type: "nominal", title: "Dominant" },
++  { field: "nbhd_dominant_pct", type: "quantitative", format: ".1f", title: "Dominant %" },
++];
++
++// ── Layer 1: analytic basemap (Chicago neighborhoods, lookup-joined) ───
++// The lookup pulls per-neighborhood aggregates from the *points* dataset
++// (already enriched by the backend so every point in a given neighborhood
++// carries the same nbhd_* fields). Polygons containing no points stay
++// flat slate; polygons with data get colored by the dominant class and
++// shaded by its percentage.
++const polygonLayer = (pointsDataName = "data") => ({
++  data: {
++    url: CHICAGO_NEIGHBORHOODS_URL,
++    format: { type: "json", property: "features" },
 +  },
-+  background: "#ffffff",
-+  padding: { left: 16, right: 16, top: 10, bottom: 10 },
-+  // Mercator projection at the layered-spec level applies to both layers.
-+  // Fit-bounds is computed from the basemap (Chicago) so points always
-+  // render in city context.
-+  projection: { type: "mercator" },
-+  layer: [
-+    // Layer 1 — basemap: Chicago neighborhood polygons in muted slate
++  transform: [
 +    {
-+      data: {
-+        url: CHICAGO_NEIGHBORHOODS_URL,
-+        format: { type: "json", property: "features" },
-+      },
-+      mark: {
-+        type: "geoshape",
-+        fill: "#f1f5f9",
-+        stroke: "#cbd5e1",
-+        strokeWidth: 0.6,
-+      },
-+    },
-+    // Layer 2 — Street Vision points colored by dominant class
-+    {
-+      transform: [
-+        { calculate: "substring(datum.image_id, 0, 6) + '…'", as: "id_short" },
-+      ],
-+      mark: {
-+        type: "circle",
-+        stroke: "#ffffff",
-+        strokeWidth: 1.5,
-+        opacity: 0.92,
-+      },
-+      encoding: {
-+        longitude: { field: "longitude", type: "quantitative" },
-+        latitude: { field: "latitude", type: "quantitative" },
-+        size: {
-+          field: "dominant_pct",
-+          type: "quantitative",
-+          scale: { range: [80, 320] },
-+          legend: null,
-+        },
-+        color: {
-+          field: "dominant_class",
-+          type: "nominal",
-+          scale: { domain: CITYSCAPES_CLASSES, range: CITYSCAPES_COLORS },
-+          legend: {
-+            title: "Dominant class",
-+            titleFontSize: 12,
-+            titleColor: "#475569",
-+            orient: "right",
-+            symbolType: "circle",
-+            symbolSize: 120,
-+            labelFontSize: 12,
-+            labelColor: "#334155",
-+            offset: 14,
-+            rowPadding: 4,
-+          },
-+        },
-+        tooltip: [
-+          { field: "id_short", type: "nominal", title: "Image" },
-+          { field: "latitude", type: "quantitative", format: ".5f", title: "Lat" },
-+          { field: "longitude", type: "quantitative", format: ".5f", title: "Lon" },
-+          { field: "dominant_class", type: "nominal", title: "Top class" },
-+          { field: "dominant_pct", type: "quantitative", format: ".1f", title: "Top %" },
-+        ],
++      lookup: "properties.name",
++      from: {
++        data: { name: pointsDataName },
++        key: "neighborhood_name",
++        fields: ["nbhd_dominant_class", "nbhd_dominant_pct", "nbhd_image_count"],
 +      },
 +    },
 +  ],
-+  config: {
-+    view: { stroke: null },
-+    axis: { labelFont: "Inter, system-ui, sans-serif", titleFont: "Inter, system-ui, sans-serif" },
-+    legend: { labelFont: "Inter, system-ui, sans-serif", titleFont: "Inter, system-ui, sans-serif" },
-+    title: { font: "Inter, system-ui, sans-serif", subtitleFont: "Inter, system-ui, sans-serif" },
++  // Visible-but-neutral B&W base: every Chicago neighborhood polygon renders
++  // with a faint slate fill and a darker slate stroke so the whole city
++  // footprint is readable, then searched neighborhoods overlay in vivid
++  // Cityscapes colors. Slate-200 (`#e2e8f0`) is light enough to keep the
++  // colored blocks dominant, but dark enough that every other neighborhood
++  // is still clearly drawn against the white chart background — earlier
++  // tries with slate-100 / pure-white made un-matched polygons invisible
++  // and the projection's auto-fit made the whole map look truncated.
++  mark: { type: "geoshape", stroke: "#475569", strokeWidth: 0.6 },
++  encoding: {
++    fill: {
++      condition: {
++        test: "datum.nbhd_dominant_class != null",
++        field: "nbhd_dominant_class",
++        type: "nominal",
++        scale: { domain: CITYSCAPES_CLASSES, range: CITYSCAPES_COLORS },
++        legend: null,
++      },
++      // Slate-200 — visible against the white chart background but neutral
++      // enough that the colored blocks remain the obvious focal point.
++      value: "#e2e8f0",
++    },
++    fillOpacity: {
++      condition: {
++        test: "datum.nbhd_dominant_class != null",
++        field: "nbhd_dominant_pct",
++        type: "quantitative",
++        // Floor 0.55 so colored blocks read as solid Cityscapes color
++        // rather than washed-out tints.
++        scale: { domain: [0, 100], range: [0.55, 0.95] },
++        legend: null,
++      },
++      value: 1,
++    },
++    tooltip: POLYGON_TOOLTIP,
 +  },
-+};
++});
 +
-+const BUILT_IN_TEMPLATES = [
-+  {
-+    id: uuid(),
-+    type: BoxType.VIS_VEGA,
-+    name: "Street Vision — Map View",
-+    description:
-+      "Mercator point map of geo-located CV results. Each circle is one " +
-+      "image, colored by its dominant Cityscapes class and sized by that " +
-+      "class's percentage. Connect to CV Analysis output.",
-+    accessLevel: AccessLevelType.ANY,
-+    code: JSON.stringify(STREET_VISION_MAP_VIEW, null, 2),
-+    custom: false,
++// ── Layer 1b: neighborhood-name labels on highlighted polygons ─────────
++// Only labels polygons that survived the lookup (i.e., neighborhoods that
++// contain at least one queried point). Centroids are precomputed by the
++// backend (/data/basemap/chicago_neighborhoods.geojson injects
++// `properties.centroid_lon` / `properties.centroid_lat` into every feature
++// using shapely), so we don't depend on Vega's `geoCentroid` expression —
++// which is brittle across Vega-Lite versions and quietly broke before.
++// White stroke + paintOrder: "stroke" gives a halo so labels stay legible
++// over saturated Cityscapes fills.
++const labelLayer = (pointsDataName = "data") => ({
++  data: {
++    url: CHICAGO_NEIGHBORHOODS_URL,
++    format: { type: "json", property: "features" },
 +  },
-+];
- 
- export default async function useTemplates() {
--    try{
--        const response = await fetch(process.env.BACKEND_URL + '/templates');
--        if (!response.ok) {
--          throw new Error(`HTTP error! status: ${response.status}`);
--        }
++  transform: [
++    {
++      lookup: "properties.name",
++      from: {
++        data: { name: pointsDataName },
++        key: "neighborhood_name",
++        fields: ["nbhd_dominant_class"],
++      },
++    },
++    { filter: "datum.nbhd_dominant_class != null" },
++  ],
++  mark: {
++    type: "text",
++    fontSize: 12,
++    fontWeight: 700,
++    color: "#0f172a",
++    stroke: "#ffffff",
++    strokeWidth: 3.5,
++    paintOrder: "stroke",
++    dy: -1,
++  },
++  encoding: {
++    longitude: { field: "properties.centroid_lon", type: "quantitative" },
++    latitude: { field: "properties.centroid_lat", type: "quantitative" },
++    text: { field: "properties.name", type: "nominal" },
++  },
++});
++
++// ── Layer 2: Street Vision points (with optional selection-aware opacity) ──
++const pointLayer = (selectionParam?: string) => ({
++  transform: [
++    { calculate: "substring(datum.image_id, 0, 6) + '…'", as: "id_short" },
++  ],
++  mark: { type: "circle", stroke: "#ffffff", strokeWidth: 1.5 },
++  encoding: {
++    longitude: { field: "longitude", type: "quantitative" },
++    latitude: { field: "latitude", type: "quantitative" },
++    size: {
++      field: "dominant_pct",
++      type: "quantitative",
++      scale: { range: [80, 320] },
++      legend: null,
++    },
++    color: {
++      field: "dominant_class",
++      type: "nominal",
++      scale: { domain: CITYSCAPES_CLASSES, range: CITYSCAPES_COLORS },
++      legend: {
++        title: "Dominant class",
++        titleFontSize: 12,
++        titleColor: "#475569",
++        orient: "right",
++        symbolType: "circle",
++        symbolSize: 120,
++        labelFontSize: 12,
++        labelColor: "#334155",
++        offset: 14,
++        rowPadding: 4,
++      },
++    },
++    ...(selectionParam
++      ? {
++          opacity: {
++            condition: { param: selectionParam, value: 0.95, empty: true },
++            value: 0.18,
++          },
++          strokeWidth: {
++            condition: { param: selectionParam, value: 2.5, empty: false },
++            value: 1.5,
++          },
+         }
 -        const templates = await response.json();
 -        return templates;
 -    }catch (error) {
 -        console.error('Failed to fetch templates:', error);
 -        return [];
-+  let serverTemplates: any[] = [];
-+  try {
-+    const response = await fetch(process.env.BACKEND_URL + '/templates');
-+    if (response.ok) {
-+      serverTemplates = await response.json();
-     }
-+  } catch (error) {
-+    console.error('Failed to fetch templates:', error);
-+  }
-+  // Always include built-in templates so the Map View is available even if
-+  // the backend has no stored templates.
-+  return [...BUILT_IN_TEMPLATES, ...serverTemplates];
- }
--
+-    }
+-}
++      : { opacity: { value: 0.92 } }),
++    tooltip: POINT_TOOLTIP,
++  },
++});
++
++const SHARED_CONFIG = {
++  view: { stroke: null },
++  axis: { labelFont: SHARED_FONTS, titleFont: SHARED_FONTS },
++  legend: { labelFont: SHARED_FONTS, titleFont: SHARED_FONTS },
++  title: { font: SHARED_FONTS, subtitleFont: SHARED_FONTS },
++};
+ 
 -// export const templates = [
 -//     {
 -//         id: uuid(),
@@ -734,10 +1438,72 @@ index d6b4500..0bb5668 100644
 -//         custom: false,
 -//     },
 -// ];
--
++// ══════════════════════════════════════════════════════════════════════
++// TEMPLATE 1 — Map View (only template; analytic polygons + auto-fit)
++// ══════════════════════════════════════════════════════════════════════
++//
++// Mercator projection without explicit scale/center means Vega-Lite
++// auto-fits to the union of all geo data — and since the basemap covers
++// every Chicago neighborhood, the full city footprint is always visible
++// regardless of where the user's queried points fall. Searched
++// neighborhoods light up in their dominant Cityscapes color; the rest of
++// Chicago stays as faint slate outlines so the city silhouette reads
++// clearly.
++const STREET_VISION_MAP_VIEW = {
++  $schema: "https://vega.github.io/schema/vega-lite/v5.json",
++  title: titleBlock(
++    "Street Vision — Map View",
++    "Polygons: dominant class per neighborhood · Points: per-image dominant class & %",
++  ),
++  background: "#ffffff",
++  padding: { left: 16, right: 16, top: 10, bottom: 10 },
++  projection: { type: "mercator" },
++  layer: [polygonLayer("data"), labelLayer("data"), pointLayer()],
++  config: SHARED_CONFIG,
++};
+ 
 -// [41.88043474773062, -87.62760230820301, 41.89666220782541, -87.59872148227429], layers=['parks']
 -// layers=[!! layers$INPUT_LIST_TEXT$[\"parks\"] !!]
 -// [!! layer$INPUT_TEXT$parks !!]
++// ══════════════════════════════════════════════════════════════════════
++// Built-in template registry
++// ══════════════════════════════════════════════════════════════════════
++//
++// We previously shipped a third "Linked Map + Bars" template using
++// `vconcat` with a shared point selection, but Vega-Lite has a known bug
++// (`Duplicate signal name: <selectionName>_tuple`) when a point selection
++// is referenced in multiple children of a vconcat. We rolled it back —
++// the standalone bar chart (vegaLifecycle DEFAULT_SPEC) and standalone
++// Map View below already cover the use cases cleanly.
++const BUILT_IN_TEMPLATES = [
++  {
++    id: uuid(),
++    type: BoxType.VIS_VEGA,
++    name: "Street Vision — Map View",
++    description:
++      "Mercator map of all Chicago neighborhoods. Searched neighborhoods " +
++      "color-coded by dominant Cityscapes class; per-image points overlaid. " +
++      "Connect to CV Analysis output.",
++    accessLevel: AccessLevelType.ANY,
++    code: JSON.stringify(STREET_VISION_MAP_VIEW, null, 2),
++    custom: false,
++  },
++];
++
++export default async function useTemplates() {
++  let serverTemplates: any[] = [];
++  try {
++    const response = await fetch(process.env.BACKEND_URL + '/templates');
++    if (response.ok) {
++      serverTemplates = await response.json();
++    }
++  } catch (error) {
++    console.error('Failed to fetch templates:', error);
++  }
++  // Always include built-in templates so the Map View is available even if
++  // the backend has no stored templates.
++  return [...BUILT_IN_TEMPLATES, ...serverTemplates];
++}
 diff --git a/utk_curio/frontend/urban-workflows/src/registry/descriptors.ts b/utk_curio/frontend/urban-workflows/src/registry/descriptors.ts
 index d7ca302..30f0e00 100644
 --- a/utk_curio/frontend/urban-workflows/src/registry/descriptors.ts

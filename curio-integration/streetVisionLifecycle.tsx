@@ -463,8 +463,20 @@ export const useStreetVisionLifecycle: BoxLifecycleHook = (data, _boxState) => {
                   <input
                     style={{ ...S.input, width: 70 }}
                     type="number"
-                    value={gsvLimit}
-                    onChange={e => setGsvLimit(Number(e.target.value) || 20)}
+                    // Show empty when value is 0 so the user can clear and
+                    // retype without the input snapping back mid-edit.
+                    value={gsvLimit > 0 ? gsvLimit : ''}
+                    onChange={e => {
+                      const v = e.target.value;
+                      if (v === '') { setGsvLimit(0); return; }
+                      const n = parseInt(v, 10);
+                      if (!isNaN(n)) setGsvLimit(n);
+                    }}
+                    onBlur={() => {
+                      // Snap into 1..100 only when the user finishes editing.
+                      if (gsvLimit < 1) setGsvLimit(20);
+                      else if (gsvLimit > 100) setGsvLimit(100);
+                    }}
                     min={1} max={100}
                   />
                   <button style={{ ...S.btn, width: 'auto', flex: 1, fontSize: 11, padding: '5px 8px', background: '#f1f5f9', color: '#334155', border: '1px solid #e2e8f0' }}
@@ -472,15 +484,30 @@ export const useStreetVisionLifecycle: BoxLifecycleHook = (data, _boxState) => {
                       fetch(`${API_BASE}/data/streetview/search_place?query=${encodeURIComponent(gsvLocation)}`)
                         .then(r => r.json())
                         .then(d => {
-                          if (d.bbox) {
-                            setGsvBbox(d.bbox);
-                            setDataSource({ source_type: 'google_streetview', bbox: d.bbox, limit: gsvLimit });
-                            fetch(`${API_BASE}/data/streetview/coverage`, {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ bbox: d.bbox, limit: gsvLimit }),
-                            }).then(r => r.json()).then(c => setGsvCoverage(c.estimated_count)).catch(() => {});
+                          if (!d.bbox) return;
+                          // Auto-expand tiny bboxes (single-address geocodes
+                          // return bboxes ~10 m across, which leaves all
+                          // points overlapping on a city-scale map). If the
+                          // bbox is smaller than ~0.005° (~500 m), pad it
+                          // out around the geocoded center so we sample a
+                          // walkable neighborhood instead of one building.
+                          let bbox: number[] = d.bbox;
+                          const [w, s, e, n] = bbox;
+                          const lonSpan = e - w;
+                          const latSpan = n - s;
+                          if (lonSpan < 0.005 || latSpan < 0.005) {
+                            const cx = typeof d.lon === 'number' ? d.lon : (w + e) / 2;
+                            const cy = typeof d.lat === 'number' ? d.lat : (s + n) / 2;
+                            const pad = 0.005; // ~500 m at Chicago latitude
+                            bbox = [cx - pad, cy - pad, cx + pad, cy + pad];
                           }
+                          setGsvBbox(bbox);
+                          setDataSource({ source_type: 'google_streetview', bbox, limit: gsvLimit });
+                          fetch(`${API_BASE}/data/streetview/coverage`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ bbox, limit: gsvLimit }),
+                          }).then(r => r.json()).then(c => setGsvCoverage(c.estimated_count)).catch(() => {});
                         }).catch(() => {});
                     }}
                   >
