@@ -21,6 +21,8 @@ A configurable computer vision node for [Curio](https://github.com/urban-toolkit
 - **Compound filtering** — Filter results by any class attribute with configurable operators (e.g., "vegetation > 30%")
 - **Error flagging** — Flag incorrect CV outputs for exclusion from aggregation
 - **Two-node Curio integration** — Separate **Street Vision** (data acquisition + inference) and **CV Analysis** (results visualization) nodes so computation spans a dataflow graph rather than living in one monolithic node
+- **Built-in Vega-Lite templates** — A default stacked-bar spec (per-image class composition, sorted west→east) and a Chicago **Map View** template that paints searched neighborhoods with their dominant Cityscapes class, labels them by name, and overlays per-image points
+- **Server-side spatial enrichment** — Each result is tagged with its Chicago neighborhood via a shapely `STRtree` point-in-polygon join, and per-neighborhood roll-ups (modal class, mean dominance %, image count) are computed on the backend so the Map View can lookup-join them onto the basemap
 - **GeoJSON + DataFrame export** — Results available as GeoJSON FeatureCollection *and* as column/row-oriented DataFrames for Vega-Lite / UTK consumption
 
 ---
@@ -54,8 +56,8 @@ flowchart LR
         SEG --> SV[Street Vision Node]
         DET --> SV
         SV -->|JSON results| CV[CV Analysis Node]
-        CV -->|GeoDataFrame| VEGA[Vega-Lite Node]
-        CV -->|GeoJSON| MAP[Map Node]
+        CV -->|GeoJSON FeatureCollection<br/>+ neighborhood enrichment| BARS[Vega-Lite — Stacked Bars]
+        CV -->|GeoJSON FeatureCollection<br/>+ neighborhood enrichment| MAPVIEW[Vega-Lite — Map View]
     end
 ```
 
@@ -204,7 +206,7 @@ The Metadata API is free — coverage checks and bbox sampling do not count agai
 5. **Step 3** — Click chips: `vegetation`, `road`, `building`, `sidewalk`, `sky`
 6. Click **Run Analysis** — real SegFormer inference runs on images fetched from Google Street View
 7. Browse the gallery, click any card to open the inspector with real segmentation overlays
-8. In Curio: drag **Street Vision** → **CV Analysis** → **Vega-Lite/Map** nodes, connect them, run — data flows downstream as GeoDataFrame / GeoJSON
+8. In Curio: drag **Street Vision** → **CV Analysis** → two **Vega-Lite** nodes. On one Vega-Lite node click **Templates** → **Street Vision — Map View** to render the Chicago basemap with searched neighborhoods colored and labelled. Leave the other Vega-Lite node on the default stacked-bar spec for per-image class composition.
 
 ---
 
@@ -248,6 +250,8 @@ See [docs/api_reference.md](docs/api_reference.md) for complete endpoint documen
 | `/api/data/streetview/search_place` | GET | Geocode a place name → bbox |
 | `/api/data/streetview/coverage` | POST | Estimate Street View coverage for a bbox |
 | `/api/data/streetview/fetch` | POST | Fetch panorama metadata in a bbox |
+| `/api/data/basemap/chicago_neighborhoods.geojson` | GET | Serve the Chicago basemap with `centroid_lon` / `centroid_lat` injected per feature |
+| `/api/data/basemap/enrich_with_neighborhoods` | POST | Tag each input point with its Chicago neighborhood and return per-neighborhood aggregates |
 | `/api/data/folder/load` | POST | Load images from local folder |
 | `/api/inference/run` | POST | Start async inference job |
 | `/api/inference/status/{id}` | GET | Poll job progress |
