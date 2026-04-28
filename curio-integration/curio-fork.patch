@@ -1069,10 +1069,10 @@ index fc7b5d5..bc0e732 100644
  
      return (
 diff --git a/utk_curio/frontend/urban-workflows/src/providers/templates.ts b/utk_curio/frontend/urban-workflows/src/providers/templates.ts
-index d6b4500..c76ee8b 100644
+index d6b4500..f78ce64 100644
 --- a/utk_curio/frontend/urban-workflows/src/providers/templates.ts
 +++ b/utk_curio/frontend/urban-workflows/src/providers/templates.ts
-@@ -1,152 +1,394 @@
+@@ -1,152 +1,405 @@
 -import { useEffect, useState } from "react";
 +import { v4 as uuid } from "uuid";
 +import { AccessLevelType, BoxType } from "../constants";
@@ -1225,7 +1225,18 @@ index d6b4500..c76ee8b 100644
 +        fields: ["nbhd_dominant_class"],
 +      },
 +    },
-+    { filter: "datum.nbhd_dominant_class != null" },
++    // Two guards: (1) only label matched neighborhoods, (2) only render
++    // labels when the basemap features actually carry centroids — older
++    // backend builds served the GeoJSON without centroid_lon / centroid_lat
++    // injected, and feeding null longitudes into the projection produced
++    // NaN coordinates that broke the entire layered chart (polygons + points
++    // would silently disappear). With this filter, the label layer becomes
++    // a no-op on stale backends instead of taking the rest of the chart
++    // down with it.
++    {
++      filter:
++        "datum.nbhd_dominant_class != null && datum.properties != null && datum.properties.centroid_lon != null && datum.properties.centroid_lat != null",
++    },
 +  ],
 +  mark: {
 +    type: "text",
