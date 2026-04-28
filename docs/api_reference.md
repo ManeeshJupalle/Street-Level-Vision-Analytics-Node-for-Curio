@@ -283,6 +283,113 @@ Load images from a local file system folder.
 
 ---
 
+## Basemap
+
+These endpoints back the Chicago **Map View** Vega-Lite template in Curio. The basemap covers all 98 community areas; the enrichment endpoint joins inference results onto it server-side so the Map View can color and label the matched polygons via a Vega-Lite `lookup` transform.
+
+### `GET /api/data/basemap/chicago_neighborhoods.geojson`
+
+Serve the bundled Chicago neighborhoods GeoJSON used as the base layer for the Map View template. Each feature is augmented in-memory (cached on first hit) with `centroid_lon` / `centroid_lat` in `properties` so the label layer can position neighborhood names without depending on Vega's brittle `geoCentroid` expression.
+
+**Response:** `application/geo+json` `FeatureCollection`. Each feature looks like:
+
+```json
+{
+  "type": "Feature",
+  "geometry": { "type": "Polygon", "coordinates": [[[-87.65, 41.93], ...]] },
+  "properties": {
+    "name": "Lincoln Park",
+    "centroid_lon": -87.64823,
+    "centroid_lat": 41.92421
+  }
+}
+```
+
+**Headers:** `Cache-Control: public, max-age=86400`
+
+**Errors:**
+
+| Status | Description |
+|--------|-------------|
+| 404 | Basemap file missing on the backend |
+
+---
+
+### `POST /api/data/basemap/enrich_with_neighborhoods`
+
+Tag each input point with the Chicago neighborhood polygon it falls inside, and return per-neighborhood aggregates (modal dominant class, mean dominance %, image count, top-3 class frequencies). Used by the CV Analysis node's `pushDownstream` so a Vega-Lite `lookup` transform can color the basemap polygons and the per-image points by the same dominant-class field.
+
+The point-in-polygon join is backed by a lazily-built [shapely `STRtree`](https://shapely.readthedocs.io/en/stable/strtree.html), which makes the lookup `O(log n)` per point — even at 50 points × 98 polygons the join finishes in well under 50 ms.
+
+**Request Body:**
+
+```json
+{
+  "points": [
+    {
+      "latitude": 41.925,
+      "longitude": -87.645,
+      "image_id": "CAoSLEFGMVFpcE1...",
+      "dominant_class": "vegetation",
+      "dominant_pct": 38.4
+    }
+  ]
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `points` | array | Yes | Per-image records produced by CV Analysis |
+| `points[].latitude` | float | No | WGS84 latitude — points without coordinates skip the join |
+| `points[].longitude` | float | No | WGS84 longitude |
+| `points[].image_id` | string | No | Pass-through identifier |
+| `points[].dominant_class` | string | No | Cityscapes class with the highest pixel ratio for this image |
+| `points[].dominant_pct` | float | No | Pixel ratio (%) for `dominant_class` |
+
+**Response:**
+
+```json
+{
+  "points": [
+    {
+      "latitude": 41.925,
+      "longitude": -87.645,
+      "image_id": "CAoSLEFGMVFpcE1...",
+      "dominant_class": "vegetation",
+      "dominant_pct": 38.4,
+      "neighborhood_name": "Lincoln Park",
+      "nbhd_dominant_class": "vegetation",
+      "nbhd_dominant_pct": 35.7,
+      "nbhd_image_count": 12
+    }
+  ],
+  "aggregates": [
+    {
+      "neighborhood_name": "Lincoln Park",
+      "image_count": 12,
+      "dominant_class": "vegetation",
+      "dominant_pct": 35.7,
+      "top3": [
+        { "class": "vegetation", "count": 7 },
+        { "class": "building", "count": 3 },
+        { "class": "road", "count": 2 }
+      ]
+    }
+  ]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `points` | array | Same length and order as the input. Each point is augmented with `neighborhood_name` (or `null` if outside Chicago) and the `nbhd_*` aggregate fields for its containing neighborhood (or `null` when the point is unmatched). |
+| `aggregates` | array | One record per neighborhood that contains at least one matched point with a non-empty `dominant_class`. |
+| `aggregates[].image_count` | integer | Number of points that fall inside the neighborhood. |
+| `aggregates[].dominant_class` | string | Modal `dominant_class` across the neighborhood's points. |
+| `aggregates[].dominant_pct` | float | Mean `dominant_pct` across the points whose `dominant_class` matches the modal class. |
+| `aggregates[].top3` | array | Top three classes by count within the neighborhood. |
+
+---
+
 ## Inference
 
 ### `POST /api/inference/run`

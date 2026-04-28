@@ -71,6 +71,17 @@ The Curio integration layer registers **two** first-class nodes. Splitting data 
 - **STREET_VISION** → JSON (job handle)
 - **CV_ANALYSIS** → GEODATAFRAME (via `curio_export`) / DATAFRAME (via `dataframe` endpoint, for Vega-Lite)
 
+### Built-in Vega-Lite Templates
+
+`providers/templates.ts` registers two ready-to-use Vega-Lite specs that downstream Vega-Lite nodes can pick from a **Templates** dropdown without authoring grammar by hand:
+
+| Template | What it shows |
+|----------|---------------|
+| Default stacked bar (auto-seeded by `vegaLifecycle.ts`) | Per-image class composition. Bars are sorted west → east via a `window: row_number` over longitude, the X axis uses integer image indices `1..N`, and the Y axis is fixed to `[0, 100]` so partial-coverage bars still anchor against the same baseline. |
+| **Street Vision — Map View** | A multi-layer Mercator projection of Chicago. Layer 1 paints the full neighborhood basemap in neutral slate so the city footprint is always visible; Layer 1b labels matched neighborhoods using the centroids the backend injects into each feature (see Layer 3 / Basemap). Layer 2 overlays per-image points colored by `dominant_class`. Auto-fit projection so the entire city stays in view regardless of where the queried points fall. |
+
+Both templates rely on the same `CITYSCAPES_CLASSES` / `CITYSCAPES_COLORS` palette as the backend overlay generator, so a "vegetation" pixel in a SegFormer overlay, a green segment in the bar chart, and a green polygon in the Map View all match.
+
 ---
 
 ## Layer 2: Standalone Frontend
@@ -136,7 +147,7 @@ backend/
 ├── routers/
 │   ├── health.py        # GET /api/health
 │   ├── models.py        # Model search, info, loading
-│   ├── data_sources.py  # Google Street View, folder, place search endpoints
+│   ├── data_sources.py  # Google Street View, folder, place search, Chicago basemap, neighborhood enrichment
 │   └── inference.py     # Job management, results, overlay, GeoJSON, dataframe, curio_export
 ├── services/
 │   ├── huggingface_service.py        # HfApi integration, model caching
@@ -190,6 +201,13 @@ The core engine that processes images through CV models:
 - Performs spatial joins (`sjoin`) to associate image-level results with grid cells
 - Enables block-level aggregation for downstream visualization
 
+#### Basemap & Neighborhood Enrichment (`routers/data_sources.py`)
+
+Two endpoints back the Chicago Map View Vega-Lite template:
+
+- **`GET /api/data/basemap/chicago_neighborhoods.geojson`** — serves the bundled 98-polygon basemap. On first hit the router walks every feature with `shapely.geometry.shape(...).centroid` and writes `centroid_lon` / `centroid_lat` into `properties`, then caches the augmented `FeatureCollection` in memory. The Map View's label layer reads those fields directly, sidestepping Vega's `geoCentroid` expression which behaves inconsistently across Vega-Lite versions.
+- **`POST /api/data/basemap/enrich_with_neighborhoods`** — accepts a list of CV Analysis points and tags each one with the neighborhood polygon it falls inside, plus per-neighborhood roll-ups (modal class, mean dominance %, image count, top-3 frequencies). The point-in-polygon join is backed by a lazily-built `shapely.strtree.STRtree`, giving `O(log n)` candidate lookup so 50 points × 98 polygons resolves in well under 50 ms. Results are written back onto each point as `nbhd_dominant_class` / `nbhd_dominant_pct` / `nbhd_image_count` so a single Vega-Lite `lookup` (basemap.name → point.neighborhood_name) is enough to drive both polygon coloring and per-point tooltips.
+
 #### Cache Service
 
 - Caches JSON metadata and any locally-resolved images to disk
@@ -222,6 +240,10 @@ Results are available in three shapes, each suited to a different consumer:
 - **GeoJSON FeatureCollection** (`/geojson`) — portable, works anywhere
 - **Column-oriented DataFrame** (`/dataframe`) — Vega-Lite–ready for in-node charts
 - **Curio-native `.data` file** (`/curio_export`) — zlib-compressed GeoDataFrame that Curio's Map / Table nodes load directly
+
+### Server-side Spatial Enrichment
+
+The CV Analysis node calls `/data/basemap/enrich_with_neighborhoods` before pushing data downstream so the heavy lifting (polygon-membership tests, per-neighborhood aggregation) happens once on the backend instead of being recomputed in every downstream Vega-Lite spec. Each point goes downstream pre-tagged with its neighborhood plus the aggregate fields, which means the Map View template only needs a `lookup` transform — no per-spec spatial logic — to color polygons by their dominant Cityscapes class.
 
 ---
 
