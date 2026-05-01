@@ -1,19 +1,34 @@
-fastapi
-uvicorn[standard]
-python-multipart
-transformers
-torch
-torchvision
-ultralytics
-Pillow
-requests
-geopandas
-shapely
-numpy
-pydantic
-pydantic-settings
-python-dotenv
-aiohttp
-aiofiles
-httpx
-huggingface-hub
+# Pinned to the versions used to produce the results in evaluation/.
+# Generated from `pip freeze` on the project's .venv.
+# To upgrade: bump a version, re-run pytest + the benchmark, regenerate this file.
+
+fastapi==0.136.0
+uvicorn[standard]==0.44.0
+python-multipart==0.0.26
+
+# CV / ML
+transformers==5.5.4
+torch==2.11.0
+torchvision==0.26.0
+ultralytics==8.4.39
+huggingface-hub==1.11.0
+
+# Imaging + HTTP
+Pillow==12.2.0
+requests==2.33.1
+aiohttp==3.13.5
+aiofiles==25.1.0
+httpx==0.28.1
+
+# Geospatial
+geopandas==1.1.3
+shapely==2.1.2
+numpy==2.4.4
+
+# Config + envs
+pydantic==2.13.2
+pydantic-settings==2.13.1
+python-dotenv==1.2.2
+
+# Tests (used by `pytest backend/tests/`)
+pytest==9.0.3
