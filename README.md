@@ -27,6 +27,21 @@ A configurable computer vision node for [Curio](https://github.com/urban-toolkit
 
 ---
 
+## Demo Media
+
+Screenshots and a short walkthrough of the running system live in [`docs/screenshots/`](docs/screenshots/).
+
+| Screenshot | What it shows |
+|---|---|
+| ![Configure & Gallery](docs/screenshots/01_gallery.png) | Standalone frontend — Config Panel on the left, streaming Gallery with color-coded badges on the right |
+| ![Image Inspector](docs/screenshots/02_inspector.png) | Image Inspector — Source Photo / CV Overlay / Side-by-Side tabs + Class Breakdown bar chart |
+| ![Curio canvas](docs/screenshots/03_curio_canvas.png) | Curio canvas with the **Street Vision → CV Analysis** two-node pipeline wired to two Vega-Lite nodes |
+| ![Map View template](docs/screenshots/04_map_view.png) | Vega-Lite **Street Vision — Map View** template — Chicago neighborhoods colored by dominant Cityscapes class with per-image points overlaid |
+
+A 30-second screen recording of the end-to-end demo lives at [`docs/screenshots/demo.gif`](docs/screenshots/demo.gif).
+
+---
+
 ## Architecture
 
 ```mermaid
@@ -230,10 +245,51 @@ The Metadata API is free — coverage checks and bbox sampling do not count agai
 
 Our evaluation focuses on **what new analytical tasks the node enables**, not CV model accuracy:
 
-1. **Task inventory** — 7 specific analytical tasks newly enabled by the node (see `evaluation/task_inventory.md`)
+1. **Task inventory** — 7 specific analytical tasks newly enabled by the node (see [`evaluation/task_inventory.md`](evaluation/task_inventory.md))
 2. **Case study walkthrough** — End-to-end Chicago greenery analysis with real SegFormer on Street View imagery
 3. **Configuration generality** — Same node reconfigured for vehicle counting (model swap, no code changes)
 4. **Multi-node dataflow** — Demonstrates Curio's value proposition by splitting data acquisition (Street Vision) from analysis/visualization (CV Analysis) across a dataflow graph
+
+---
+
+## Results & Reproducibility
+
+Every artifact under [`evaluation/`](evaluation/) is reproducible from the pinned dependencies in `requirements.txt` and `frontend/package-lock.json`.
+
+### Where the artifacts live
+
+| Artifact | File | Produced by |
+|---|---|---|
+| Latency benchmark numbers | [`evaluation/performance_benchmarks/results.json`](evaluation/performance_benchmarks/results.json) | `python -m evaluation.performance_benchmarks.benchmark` |
+| Latency chart | [`evaluation/performance_benchmarks/latency_chart.png`](evaluation/performance_benchmarks/latency_chart.png) | Same script (auto-generated) |
+| Backend unit test results | (CI-style, no checked-in artifact) | `pytest backend/tests/` |
+| Case-study configurations | [`evaluation/case_studies/chicago_greenery/config.json`](evaluation/case_studies/chicago_greenery/config.json), [`vehicle_counting/config.json`](evaluation/case_studies/vehicle_counting/config.json) | Hand-authored — load into the frontend Config Panel |
+| Task inventory | [`evaluation/task_inventory.md`](evaluation/task_inventory.md) | Hand-authored, derived from the Cityscapes / street-furniture class definitions in [`data/class_definitions/`](data/class_definitions/) |
+
+### How to reproduce each result
+
+```bash
+# 1. Install pinned dependencies (Python + Node)
+pip install -r requirements.txt
+cd frontend && npm ci && cd ..
+
+# 2. Reproduce the latency benchmark — regenerates results.json + latency_chart.png
+python -m evaluation.performance_benchmarks.benchmark
+
+# 3. Run the backend test suite
+pytest backend/tests/ -v
+
+# 4. Reproduce a case study end-to-end
+#    a. Start backend + frontend (see "Setup" above)
+#    b. Open http://localhost:5173
+#    c. Open evaluation/case_studies/chicago_greenery/config.json — copy each field
+#       into the matching Config Panel control (model, bbox, class chips)
+#    d. Click "Run Analysis" — gallery streams in, GeoJSON exports via the
+#       /api/inference/results/{job_id}/geojson endpoint
+#    e. Repeat with vehicle_counting/config.json (swaps the model to YOLOv8)
+```
+
+> The case-study `config.json` files are reference inputs — they describe the exact configuration we used so the run is reproducible, not automation scripts. The Curio canvas demo (Street Vision → CV Analysis → Vega-Lite) is reproduced by following the **Quick Demo** section above.
 
 ---
 
@@ -259,6 +315,18 @@ See [docs/api_reference.md](docs/api_reference.md) for complete endpoint documen
 | `/api/inference/results/{id}/geojson` | GET | Export results as GeoJSON |
 | `/api/inference/results/{id}/dataframe` | GET | Export results as column/row DataFrame |
 | `/api/inference/results/{id}/curio_export` | GET | Save as Curio-native `.data` file |
+
+---
+
+## Citation
+
+If you reference this project, please cite as:
+
+```
+Rachakonda, L. S., & Jupalle, L. S. M. R. (2026).
+Street-Level Vision Analytics Node for Curio: A two-node CV pipeline for urban analysts.
+CS 524 Final Project, University of Illinois Chicago.
+```
 
 ---
 
