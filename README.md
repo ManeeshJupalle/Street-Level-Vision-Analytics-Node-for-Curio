@@ -60,26 +60,12 @@ special-casing.
 
 ## Demo
 
-> **A short walkthrough video and additional screenshots will be uploaded here.**
-> Drop `.mp4`/`.gif` and any extra `.png` files into [`paper/figures/`](paper/figures/) and link
-> them in this section using the Markdown syntax shown below.
-
 ### Walkthrough video
 
-<!-- Replace the placeholder line below once the video is committed.
-     For files committed to the repo (preferred for short clips, <10 MB):
-     ![Walkthrough](paper/figures/walkthrough.gif)
+A two-minute end-to-end walkthrough — model selection, place search, run, image inspector,
+Vega-Lite Map View — runs inline below.
 
-     For longer videos, upload the .mp4 to the GitHub web UI (drag-and-drop into
-     a README edit window). GitHub will rewrite it to a user-asset URL like
-     https://github.com/user-attachments/assets/<uuid>.mp4 — paste that URL here.
--->
-
-*Walkthrough video placeholder — see [Adding Demo Media](#adding-demo-media) below for the
-upload steps.*
-
-
-
+https://github.com/user-attachments/assets/d3bbe6f6-0fc1-4af1-a146-e08c11fbe91f
 
 ### Screenshots
 
@@ -90,8 +76,8 @@ upload steps.*
 
 | Image inspector | System architecture |
 | :---: | :---: |
-| ![Inspector](paper/figures/gallery_inspector.png.png) 
-| Source photo + Mask2Former overlay + class breakdown 
+| ![Inspector](paper/figures/gallery_inspector.png.png) | ![Architecture](paper/figures/architecture.png.png) |
+| Source photo + Mask2Former overlay + class breakdown | Two-node split with the external services it talks to |
 
 ---
 
