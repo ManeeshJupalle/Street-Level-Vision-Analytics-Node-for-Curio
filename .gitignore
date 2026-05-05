@@ -30,6 +30,9 @@ node_modules/
 *.swp
 *.swo
 
+# Claude Code per-user state
+.claude/
+
 # OS
 .DS_Store
 Thumbs.db
