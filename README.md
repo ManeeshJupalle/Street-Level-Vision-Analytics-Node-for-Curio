@@ -69,15 +69,10 @@ https://github.com/user-attachments/assets/d3bbe6f6-0fc1-4af1-a146-e08c11fbe91f
 
 ### Screenshots
 
-| Curio canvas (teaser) | Configuration wizard |
-| :---: | :---: |
-| ![Teaser](paper/figures/teaser_curio_canvas.png.png) | ![Wizard](paper/figures/config_wizard.png.png) |
-| Street Vision → CV Analysis → Map View + Bar Chart + Table | Three-step wizard inside the Street Vision node |
-
-| Image inspector | System architecture |
-| :---: | :---: |
-| ![Inspector](paper/figures/gallery_inspector.png.png) | ![Architecture](paper/figures/architecture.png.png) |
-| Source photo + Mask2Former overlay + class breakdown | Two-node split with the external services it talks to |
+| Curio canvas (teaser) | Configuration wizard | Image inspector |
+| :---: | :---: | :---: |
+| ![Teaser](paper/figures/teaser_curio_canvas.png.png) | ![Wizard](paper/figures/config_wizard.png.png) | ![Inspector](paper/figures/gallery_inspector.png.png) |
+| Street Vision → CV Analysis → Map View + Bar Chart + Table | Three-step wizard inside the Street Vision node | Source photo + Mask2Former overlay + class breakdown |
 
 ---
 
@@ -106,33 +101,9 @@ https://github.com/user-attachments/assets/d3bbe6f6-0fc1-4af1-a146-e08c11fbe91f
 
 ## System Architecture
 
-```mermaid
-flowchart LR
-    subgraph External["External services"]
-      HF[HuggingFace Hub]
-      NOM[Nominatim<br/>OSM geocoder]
-      GSV[Google Street View<br/>Static + Metadata API]
-    end
-
-    subgraph Backend["FastAPI backend (port 8000)"]
-      ROUT[Routers] --> SVC[Services]
-      SVC --> INF[Inference Engine<br/>SegFormer / Mask2Former / YOLOv8]
-      SVC --> SPAT[Spatial Service<br/>Shapely STRtree]
-    end
-
-    subgraph CurioCanvas["Curio canvas (port 3000)"]
-      SV[Street Vision node] -->|JSON job handle| CV[CV Analysis node]
-      CV -->|GeoJSON + neighborhoods| VLBars[Vega-Lite — Stacked Bars]
-      CV -->|GeoJSON + neighborhoods| VLMap[Vega-Lite — Chicago Map View]
-      CV -->|column DataFrame| TBL[Table node]
-    end
-
-    HF -.search & load.-> SVC
-    NOM -.place lookup.-> SVC
-    GSV -.coverage + fetch.-> SVC
-    SV <==> ROUT
-    CV <==> ROUT
-```
+<p align="center">
+  <img src="paper/figures/architecture.png.png" alt="Architecture diagram: external APIs (HuggingFace, Google Street View, Nominatim) feed the Street Vision node (configuration panel, inference, cache); JSON crosses into the CV Analysis node (consume JSON, spatial enrichment via STRtree, per-neighborhood roll-ups, multi-format export); user-facing outputs are the results gallery, image inspector, Vega-Lite bar and map, and Curio downstream nodes." width="92%">
+</p>
 
 A more detailed walkthrough of the three layers (Curio nodes, frontend, backend) lives in
 [`docs/architecture.md`](docs/architecture.md).
