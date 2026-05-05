@@ -6,7 +6,7 @@
 > outputs into Curio's existing Vega-Lite, Map, and Table nodes, all without writing Python.
 
 **CS 524: Big Data Visual Analytics, Spring 2026, Group 13**
-**Authors:** L. Sravya Rachakonda · Laxmi Sai Maneesh Reddy Jupalle
+**Authors:** Lakshmi Sravya Rachakonda · Laxmi Sai Maneesh Reddy Jupalle
 **University of Illinois Chicago**
 
 <p align="center">
@@ -47,8 +47,8 @@ what blocks adoption.
 
 This project closes that gap by extending Curio with a **two-node CV pipeline**:
 
-- **Street Vision**: model selection, place-name search, Google Street View sampling, inference.
-- **CV Analysis**: gallery / inspector UI, server-side neighborhood enrichment, GeoJSON +
+- **Street Vision**: Model selection, place-name search, Google Street View sampling, inference.
+- **CV Analysis**: Gallery / inspector UI, server-side neighborhood enrichment, GeoJSON +
   DataFrame export to downstream Vega-Lite and UTK nodes.
 
 Splitting the work across two nodes (rather than one monolithic widget) was a direct response to
@@ -81,21 +81,21 @@ https://github.com/user-attachments/assets/2d75b354-8ef7-4607-acbf-d7bc316a2684
 
 ## Key Features
 
-- **HuggingFace model picker**: search by task (segmentation / detection), live download counts,
+- **HuggingFace model picker**: Search by task (segmentation / detection), live download counts,
   auto-pick top result. Tested with SegFormer, Mask2Former, OneFormer, BEiT, DPT, YOLOv8.
 - **Place-name search**: Nominatim geocodes a free-text place name to a bounding box; the
   Street View **Metadata API** is used for free coverage probing before any paid image fetch.
 - **Real CV inference on CPU**: SegFormer / Mask2Former for semantic segmentation; YOLOv8 for
   detection. Per-image inference is cached so repeat runs amortize the model load cost.
-- **Server-side spatial enrichment**: every result is tagged with its Chicago neighborhood via a
+- **Server-side spatial enrichment**: Every result is tagged with its Chicago neighborhood via a
   Shapely `STRtree` point-in-polygon join; per-neighborhood roll-ups (modal class, mean
   dominance %, image count) are computed on the backend.
-- **Built-in Vega-Lite templates**: a default per-image stacked bar (sorted west→east) and a
+- **Built-in Vega-Lite templates**: A default per-image stacked bar (sorted west→east) and a
   Chicago **Map View** that paints searched neighborhoods by their dominant Cityscapes class,
   labels them by name, and overlays per-image points sized by dominance.
-- **Two output formats**: a GeoJSON FeatureCollection on the CV Analysis output port for UTK
+- **Two output formats**: A GeoJSON FeatureCollection on the CV Analysis output port for UTK
   and external consumers, plus a column-oriented DataFrame projection for in-Curio Vega-Lite.
-- **Compound filtering**: filter results by any class attribute and operator
+- **Compound filtering**: Filter results by any class attribute and operator
   (e.g., `vegetation > 0.30 AND road < 0.20`) directly in the gallery.
 - **Local folder fallback**: point the node at any folder of `.jpg/.png/.webp` files for offline
   analysis when no Google Street View key is available.
@@ -113,11 +113,11 @@ A more detailed walkthrough of the three layers (Curio nodes, frontend, backend)
 
 ### Data Flow (one analysis)
 
-1. **Configure**: user picks a HuggingFace model, a place name, and target classes inside the
+1. **Configure**: User picks a HuggingFace model, a place name, and target classes inside the
    Street Vision node's three-step wizard.
-2. **Fetch**: backend geocodes the place via Nominatim, samples the resulting bbox against the
+2. **Fetch**: Backend geocodes the place via Nominatim, samples the resulting bbox against the
    Street View Metadata API, downloads covered panoramas as 640×480 / 90° FoV images.
-3. **Infer**: images are batched through the selected model on CPU; segmentation produces a
+3. **Infer**: Images are batched through the selected model on CPU; segmentation produces a
    colored overlay PNG plus a per-class pixel-ratio dict, detection produces bounding boxes plus
    per-class object counts.
 4. **Enrich**: CV Analysis posts the results to `/api/data/basemap/enrich_with_neighborhoods`,
@@ -221,7 +221,7 @@ cp .env.example .env                  # then add GOOGLE_MAPS_API_KEY=AIza...
 > **Pinning policy.** `requirements.txt` is fully pinned (every dependency at the version used
 > to produce the results in [`evaluation/`](evaluation/)). To upgrade: bump a version, re-run
 > `pytest backend/tests/` and `python -m evaluation.performance_benchmarks.benchmark`, then
-> regenerate the file from `pip freeze`.
+> Regenerate the file from `pip freeze`.
 
 ### 3. Frontend (React 19, Vite)
 
@@ -269,8 +269,8 @@ The system fetches images live from the Google Street View Static API. To enable
    `"demo_mode": false`.
 
 > **Why we don't redistribute imagery.** Google Street View imagery is licensed and cannot be
-> bundled with the repo. The Metadata API checks coverage for free, so users can sweep large
-> areas to plan a run before spending image quota.
+> Bundled with the repo. The Metadata API checks coverage for free, so users can sweep large
+> Areas to plan a run before spending image quota.
 
 ### Local-folder fallback (for offline reproducibility)
 
@@ -281,7 +281,7 @@ geocoding step. A small set of cached Mapillary/Street-View test images lives in
 
 ### Chicago basemap (bundled)
 
-`data/chicago_neighborhoods.geojson`: a curated 98-polygon Chicago neighborhood basemap, served
+`data/chicago_neighborhoods.geojson`: A curated 98-polygon Chicago neighborhood basemap, served
 by `GET /api/data/basemap/chicago_neighborhoods.geojson` with WGS84 centroids injected into each
 feature's `properties` so the Map View label layer can render without a Vega `geoCentroid`
 expression.
@@ -290,9 +290,9 @@ expression.
 
 CSVs in [`data/class_definitions/`](data/class_definitions/):
 
-- `cityscapes_19.csv`: the 19 standard Cityscapes classes (default segmentation taxonomy).
-- `street_furniture.csv`: benches, trash cans, bike racks, ramps (used by Task 2 / Task 5).
-- `vegetation.csv`: vegetation-only subset for greenery-focused runs.
+- `cityscapes_19.csv`: The 19 standard Cityscapes classes (default segmentation taxonomy).
+- `street_furniture.csv`: Benches, trash cans, bike racks, ramps (used by Task 2 / Task 5).
+- `vegetation.csv`: Vegetation-only subset for greenery-focused runs.
 
 ---
 
