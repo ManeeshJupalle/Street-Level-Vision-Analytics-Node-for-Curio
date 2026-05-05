@@ -78,6 +78,9 @@ special-casing.
 *Walkthrough video placeholder — see [Adding Demo Media](#adding-demo-media) below for the
 upload steps.*
 
+
+
+
 ### Screenshots
 
 | Curio canvas (teaser) | Configuration wizard |
@@ -87,8 +90,8 @@ upload steps.*
 
 | Image inspector | System architecture |
 | :---: | :---: |
-| ![Inspector](paper/figures/gallery_inspector.png.png) | ![Architecture](paper/figures/architecture.png.png) |
-| Source photo + Mask2Former overlay + class breakdown | Two-node split with the external services it talks to |
+| ![Inspector](paper/figures/gallery_inspector.png.png) 
+| Source photo + Mask2Former overlay + class breakdown 
 
 ---
 
