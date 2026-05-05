@@ -1,165 +1,167 @@
 # Street-Level Vision Analytics Node for Curio
 
-A configurable computer vision node for [Curio](https://github.com/urban-toolkit/curio), an urban visual analytics platform. This node enables urban planners and city analysts to apply pre-trained deep learning models — semantic segmentation and object detection — to street-level imagery fetched live from the Google Street View Static API, all through an interactive interface without writing code. Results flow as GeoJSON into Curio's dataflow graph for downstream map, chart, and table visualization.
+> A two-node extension to [Curio](https://github.com/urban-toolkit/curio) that brings pre-trained
+> computer vision into a no-code urban dataflow workflow. Pick a HuggingFace segmentation or
+> detection model, type a Chicago place name, and route the per-image and per-neighborhood
+> outputs into Curio's existing Vega-Lite, Map, and Table nodes — all without writing Python.
 
 **CS 524: Big Data Visual Analytics — Spring 2026 — Group 13**
+**Authors:** L. Sravya Rachakonda · Laxmi Sai Maneesh Reddy Jupalle
+**University of Illinois Chicago**
 
-**Team:** L. Sravya Rachakonda & Laxmi Sai Maneesh Reddy Jupalle
-
----
-
-## Features
-
-- **Model selection** — Browse and search HuggingFace models by task type (segmentation, detection) with live search and download counts
-- **Real street imagery** — Google Street View Static API with place-name search (Nominatim-powered), bounding-box sampling, and coverage estimation
-- **Real CV inference** — Actual SegFormer semantic segmentation on CPU with per-pixel class predictions and colored overlay generation
-- **Local folder fallback** — Point the node at any folder of local images for offline analysis
-- **Configurable target classes** — Select classes via suggestion chips (Cityscapes preset) or type custom classes, with CSV upload support
-- **Results gallery** — Interactive image grid with color-coded metric badges (green/amber/red based on class ratios)
-- **Image inspector** — Source photo, CV overlay (composited from real segmentation mask), side-by-side comparison, and per-class breakdown bar chart
-- **Consistent color system** — Shared palette across overlays, charts, and chips (road=blue, building=green, vegetation=amber, sky=light blue, sidewalk=pink)
-- **Compound filtering** — Filter results by any class attribute with configurable operators (e.g., "vegetation > 30%")
-- **Error flagging** — Flag incorrect CV outputs for exclusion from aggregation
-- **Two-node Curio integration** — Separate **Street Vision** (data acquisition + inference) and **CV Analysis** (results visualization) nodes so computation spans a dataflow graph rather than living in one monolithic node
-- **Built-in Vega-Lite templates** — A default stacked-bar spec (per-image class composition, sorted west→east) and a Chicago **Map View** template that paints searched neighborhoods with their dominant Cityscapes class, labels them by name, and overlays per-image points
-- **Server-side spatial enrichment** — Each result is tagged with its Chicago neighborhood via a shapely `STRtree` point-in-polygon join, and per-neighborhood roll-ups (modal class, mean dominance %, image count) are computed on the backend so the Map View can lookup-join them onto the basemap
-- **GeoJSON + DataFrame export** — Results available as GeoJSON FeatureCollection *and* as column/row-oriented DataFrames for Vega-Lite / UTK consumption
+<p align="center">
+  <img src="paper/figures/teaser_curio_canvas.png.png" alt="Curio canvas with Street Vision feeding CV Analysis, which fans out to a Vega-Lite Map View, a per-neighborhood bar chart, and a Table node." width="92%">
+</p>
 
 ---
 
-## Demo Media
+## Table of Contents
 
-Screenshots and a short walkthrough of the running system live in [`docs/screenshots/`](docs/screenshots/).
-
-| Screenshot | What it shows |
-|---|---|
-| ![Configure & Gallery](docs/screenshots/01_gallery.png) | Standalone frontend — Config Panel on the left, streaming Gallery with color-coded badges on the right |
-| ![Image Inspector](docs/screenshots/02_inspector.png) | Image Inspector — Source Photo / CV Overlay / Side-by-Side tabs + Class Breakdown bar chart |
-| ![Curio canvas](docs/screenshots/03_curio_canvas.png) | Curio canvas with the **Street Vision → CV Analysis** two-node pipeline wired to two Vega-Lite nodes |
-| ![Map View template](docs/screenshots/04_map_view.png) | Vega-Lite **Street Vision — Map View** template — Chicago neighborhoods colored by dominant Cityscapes class with per-image points overlaid |
-
-A 30-second screen recording of the end-to-end demo lives at [`docs/screenshots/demo.gif`](docs/screenshots/demo.gif).
+1. [Problem Statement](#problem-statement)
+2. [Demo](#demo)
+3. [Key Features](#key-features)
+4. [System Architecture](#system-architecture)
+5. [Project Structure](#project-structure)
+6. [Setup](#setup)
+7. [Dataset Access](#dataset-access)
+8. [How to Run](#how-to-run)
+9. [Reproducing Key Results](#reproducing-key-results)
+10. [Results Artifacts](#results-artifacts)
+11. [API Reference](#api-reference)
+12. [Documentation](#documentation)
+13. [Citation & License](#citation--license)
 
 ---
 
-## Architecture
+## Problem Statement
+
+Cities now publish petabyte-scale street-level imagery (Google Street View, Mapillary, municipal
+camera rigs), and a decade of computer-vision research has shown that pre-trained semantic
+segmentation and object detection models can extract policy-relevant signals from those images:
+tree canopy, sidewalk condition, vehicle composition, accessibility infrastructure. **The
+catch is workflow friction.** An urban planner asking *"which Lincoln Park blocks have less
+than 10% sidewalk?"* currently has to learn the HuggingFace API, write image-fetching code
+against the Street View Static API, manage a CUDA environment, run inference, then stitch the
+results into a GIS pipeline alongside census tracts. The CV is the easy part — the plumbing is
+what blocks adoption.
+
+This project closes that gap by extending Curio with a **two-node CV pipeline**:
+
+- **Street Vision** — model selection, place-name search, Google Street View sampling, inference.
+- **CV Analysis** — gallery / inspector UI, server-side neighborhood enrichment, GeoJSON +
+  DataFrame export to downstream Vega-Lite and UTK nodes.
+
+Splitting the work across two nodes (rather than one monolithic widget) was a direct response to
+instructor feedback in M2: it forces a clean serialization boundary between inference and
+visualization, and the GeoJSON output slots into Curio's existing visualization nodes with no
+special-casing.
+
+---
+
+## Demo
+
+> **A short walkthrough video and additional screenshots will be uploaded here.**
+> Drop `.mp4`/`.gif` and any extra `.png` files into [`paper/figures/`](paper/figures/) and link
+> them in this section using the Markdown syntax shown below.
+
+### Walkthrough video
+
+<!-- Replace the placeholder line below once the video is committed.
+     For files committed to the repo (preferred for short clips, <10 MB):
+     ![Walkthrough](paper/figures/walkthrough.gif)
+
+     For longer videos, upload the .mp4 to the GitHub web UI (drag-and-drop into
+     a README edit window). GitHub will rewrite it to a user-asset URL like
+     https://github.com/user-attachments/assets/<uuid>.mp4 — paste that URL here.
+-->
+
+*Walkthrough video placeholder — see [Adding Demo Media](#adding-demo-media) below for the
+upload steps.*
+
+### Screenshots
+
+| Curio canvas (teaser) | Configuration wizard |
+| :---: | :---: |
+| ![Teaser](paper/figures/teaser_curio_canvas.png.png) | ![Wizard](paper/figures/config_wizard.png.png) |
+| Street Vision → CV Analysis → Map View + Bar Chart + Table | Three-step wizard inside the Street Vision node |
+
+| Image inspector | System architecture |
+| :---: | :---: |
+| ![Inspector](paper/figures/gallery_inspector.png.png) | ![Architecture](paper/figures/architecture.png.png) |
+| Source photo + Mask2Former overlay + class breakdown | Two-node split with the external services it talks to |
+
+---
+
+## Key Features
+
+- **HuggingFace model picker** — search by task (segmentation / detection), live download counts,
+  auto-pick top result. Tested with SegFormer, Mask2Former, OneFormer, BEiT, DPT, YOLOv8.
+- **Place-name search** — Nominatim geocodes a free-text place name to a bounding box; the
+  Street View **Metadata API** is used for free coverage probing before any paid image fetch.
+- **Real CV inference on CPU** — SegFormer / Mask2Former for semantic segmentation; YOLOv8 for
+  detection. Per-image inference is cached so repeat runs amortize the model load cost.
+- **Server-side spatial enrichment** — every result is tagged with its Chicago neighborhood via a
+  Shapely `STRtree` point-in-polygon join; per-neighborhood roll-ups (modal class, mean
+  dominance %, image count) are computed on the backend.
+- **Built-in Vega-Lite templates** — a default per-image stacked bar (sorted west→east) and a
+  Chicago **Map View** that paints searched neighborhoods by their dominant Cityscapes class,
+  labels them by name, and overlays per-image points sized by dominance.
+- **Two output formats** — a GeoJSON FeatureCollection on the CV Analysis output port for UTK
+  and external consumers, plus a column-oriented DataFrame projection for in-Curio Vega-Lite.
+- **Compound filtering** — filter results by any class attribute and operator
+  (e.g., `vegetation > 0.30 AND road < 0.20`) directly in the gallery.
+- **Local folder fallback** — point the node at any folder of `.jpg/.png/.webp` files for offline
+  analysis when no Google Street View key is available.
+
+---
+
+## System Architecture
 
 ```mermaid
 flowchart LR
-    subgraph User Interface
-        A[Config Panel] -->|1. Select model| B[Backend API]
-        A -->|2. Choose data source| B
-        A -->|3. Set target classes| B
+    subgraph External["External services"]
+      HF[HuggingFace Hub]
+      NOM[Nominatim<br/>OSM geocoder]
+      GSV[Google Street View<br/>Static + Metadata API]
     end
 
-    subgraph External Services
-        HF[HuggingFace Hub]
-        GSV[Google Street View API]
-        NOM[Nominatim Geocoder]
+    subgraph Backend["FastAPI backend (port 8000)"]
+      ROUT[Routers] --> SVC[Services]
+      SVC --> INF[Inference Engine<br/>SegFormer / Mask2Former / YOLOv8]
+      SVC --> SPAT[Spatial Service<br/>Shapely STRtree]
     end
 
-    subgraph Backend
-        B -->|Search & load| HF
-        B -->|Place lookup| NOM
-        B -->|Fetch imagery| GSV
-        B --> INF[Inference Engine]
-        INF -->|SegFormer| SEG[Segmentation]
-        INF -->|YOLOv8| DET[Detection]
+    subgraph CurioCanvas["Curio canvas (port 3000)"]
+      SV[Street Vision node] -->|JSON job handle| CV[CV Analysis node]
+      CV -->|GeoJSON + neighborhoods| VLBars[Vega-Lite — Stacked Bars]
+      CV -->|GeoJSON + neighborhoods| VLMap[Vega-Lite — Chicago Map View]
+      CV -->|column DataFrame| TBL[Table node]
     end
 
-    subgraph Curio Canvas
-        SEG --> SV[Street Vision Node]
-        DET --> SV
-        SV -->|JSON results| CV[CV Analysis Node]
-        CV -->|GeoJSON FeatureCollection<br/>+ neighborhood enrichment| BARS[Vega-Lite — Stacked Bars]
-        CV -->|GeoJSON FeatureCollection<br/>+ neighborhood enrichment| MAPVIEW[Vega-Lite — Map View]
-    end
+    HF -.search & load.-> SVC
+    NOM -.place lookup.-> SVC
+    GSV -.coverage + fetch.-> SVC
+    SV <==> ROUT
+    CV <==> ROUT
 ```
 
-### Data Flow
+A more detailed walkthrough of the three layers (Curio nodes, frontend, backend) lives in
+[`docs/architecture.md`](docs/architecture.md).
 
-1. **Configure** — User selects a CV model from HuggingFace, a location via place search (→ bbox), and target classes
-2. **Fetch** — Backend geocodes the place, samples the bbox against the Street View Metadata API, and downloads images
-3. **Infer** — Images are processed through the selected model (SegFormer or YOLOv8) on the backend
-4. **Analyze** — Street Vision pushes structured JSON to the CV Analysis node, which renders the gallery, overlays, and per-class metrics
-5. **Export** — CV Analysis emits a GeoDataFrame / GeoJSON for Curio's downstream Vega-Lite, UTK, and map nodes
+### Data Flow (one analysis)
 
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Backend | Python, FastAPI, Uvicorn |
-| CV Models | HuggingFace Transformers (SegFormer), Ultralytics YOLOv8 |
-| Street Imagery | Google Street View Static API + Metadata API |
-| Geocoding | OpenStreetMap Nominatim |
-| Frontend | React 18, TypeScript, Vite, Tailwind CSS |
-| Curio Integration | React Flow v11, custom BoxDescriptor + lifecycle hooks (2 nodes) |
-| Spatial Processing | GeoPandas, Shapely |
-| Data Formats | GeoJSON, JSON, CSV |
-
----
-
-## Setup
-
-### Prerequisites
-
-- Python 3.10+
-- Node.js 18+
-- **Google Maps API key** with the Street View Static API and Street View Metadata API enabled — required
-- (Optional) HuggingFace token — only needed for private models
-
-### Backend
-
-```bash
-# Create and activate virtual environment (from repo root)
-python -m venv .venv
-source .venv/bin/activate        # macOS/Linux
-# .venv\Scripts\activate         # Windows
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Configure environment
-cp .env.example .env
-# Edit .env to add GOOGLE_MAPS_API_KEY=...
-
-# Start the server
-uvicorn backend.main:app --reload --port 8000
-```
-
-API docs are available at `http://127.0.0.1:8000/docs`.
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Open `http://localhost:5173` in your browser.
-
-### Running with Curio (all 4 servers)
-
-```bash
-# Terminal 1 — Curio Flask backend (port 5002)
-cd curio && python -c "from utk_curio.backend.app import create_app; app=create_app(); app.run(host='localhost', port=5002)"
-
-# Terminal 2 — Street Vision backend (port 8000)
-uvicorn backend.main:app --reload --port 8000
-
-# Terminal 3 — Street Vision frontend (port 5173)
-cd frontend && npm run dev
-
-# Terminal 4 — Curio frontend (port 3000)
-cd curio/utk_curio/frontend/urban-workflows && npx webpack serve --mode development --port 3000
-```
-
-Then open `http://localhost:3000`, drag **Street Vision** and **CV Analysis** from the node palette, connect them, and start analyzing.
-
-> For detailed installation instructions, see [docs/setup.md](docs/setup.md).
+1. **Configure** — user picks a HuggingFace model, a place name, and target classes inside the
+   Street Vision node's three-step wizard.
+2. **Fetch** — backend geocodes the place via Nominatim, samples the resulting bbox against the
+   Street View Metadata API, downloads covered panoramas as 640×480 / 90° FoV images.
+3. **Infer** — images are batched through the selected model on CPU; segmentation produces a
+   colored overlay PNG plus a per-class pixel-ratio dict, detection produces bounding boxes plus
+   per-class object counts.
+4. **Enrich** — CV Analysis posts the results to `/api/data/basemap/enrich_with_neighborhoods`,
+   which runs the STRtree join and returns per-point neighborhood tags + per-neighborhood
+   aggregates.
+5. **Export** — CV Analysis emits a GeoJSON FeatureCollection (and exposes a DataFrame projection
+   over a separate REST endpoint) consumed by downstream Vega-Lite, UTK, Map, and Table nodes.
 
 ---
 
@@ -167,169 +169,394 @@ Then open `http://localhost:3000`, drag **Street Vision** and **CV Analysis** fr
 
 ```
 .
-├── backend/                  # FastAPI server + CV inference pipeline
-│   ├── main.py               #   App entry point, CORS middleware
-│   ├── config.py             #   Environment settings (pydantic-settings)
-│   ├── routers/              #   API endpoint modules (health, models, data, inference)
+├── README.md                 # ← this file
+├── requirements.txt          # Pinned-by-convention Python deps (see Setup)
+├── pyproject.toml            # pytest config
+├── backend/                  # FastAPI server + inference pipeline
+│   ├── main.py               #   App entry, CORS, router registration
+│   ├── config.py             #   Settings via pydantic-settings (.env)
+│   ├── routers/              #   API modules: health, models, data_sources, inference
 │   ├── services/             #   HuggingFace, Google Street View, inference, spatial, cache
 │   ├── models/               #   Pydantic request/response schemas
-│   └── utils/                #   Image processing and geo helpers
-├── frontend/                 # React + TypeScript standalone UI (Vite)
+│   └── utils/                #   Image and geo helpers
+├── frontend/                 # React 19 + TypeScript + Vite UI (also embedded in Curio)
 │   └── src/
-│       ├── components/       #     ConfigPanel (sidebar), Gallery (results), common UI
+│       ├── components/       #     ConfigPanel, Gallery, Inspector, common UI
 │       ├── hooks/            #     useModels, useInference, useDataSource, useFilters
 │       ├── services/         #     Axios API client
-│       ├── utils/            #     apiBase resolver (Vite + Curio/webpack compatible)
-│       ├── constants/        #     Shared class color palette
+│       ├── utils/apiBase.ts  #     Resolves backend URL across Vite + webpack/Curio
+│       ├── constants/        #     Shared Cityscapes color palette
 │       └── types/            #     TypeScript interfaces
-├── curio-integration/        # Files for Curio node registration
-│   └── streetVisionLifecycle.tsx
-├── curio/                    # Full Curio fork with Street Vision + CV Analysis nodes registered
-├── data/                     # Class definitions and sample bboxes
+├── curio/                    # Forked Curio with Street Vision + CV Analysis registered
+├── curio-integration/        # Files needed to graft those nodes onto a clean Curio clone
+│   ├── streetVisionLifecycle.tsx
+│   ├── cvAnalysisLifecycle.tsx
+│   ├── curio-fork.patch
+│   └── README.md             #   Apply instructions
+├── data/
 │   ├── chicago_bbox.json
-│   └── class_definitions/    #   Cityscapes 19-class CSV, street furniture CSV
-├── evaluation/               # Case studies and task inventory
-└── docs/                     # Documentation
+│   ├── chicago_neighborhoods.geojson
+│   └── class_definitions/    #   Cityscapes 19-class CSV, street furniture, vegetation
+├── docs/
+│   ├── architecture.md       #   Layer-by-layer walkthrough
+│   ├── api_reference.md      #   Full request/response spec for every endpoint
+│   └── setup.md              #   Detailed install + troubleshooting
+├── evaluation/
+│   ├── task_inventory.md     #   Seven analytical tasks the node enables
+│   ├── case_studies/
+│   │   ├── chicago_greenery/config.json
+│   │   └── vehicle_counting/config.json
+│   └── performance_benchmarks/
+│       ├── README.md
+│       ├── benchmark.py
+│       └── results.json
+├── paper/                    # IEEE VGTC 4-page paper (LaTeX)
+│   ├── main.tex
+│   ├── template.bib
+│   └── figures/              #   Teaser, architecture, wizard, inspector
+├── cache/                    # Locally-fetched Street View imagery (gitignored at runtime)
+└── model_cache/              # HuggingFace + Ultralytics model weights (gitignored)
 ```
+
+---
+
+## Setup
+
+### Prerequisites
+
+| Requirement | Version | Notes |
+| --- | --- | --- |
+| Python | 3.10+ | Backend runtime |
+| Node.js | 18+ | Frontend + Curio webpack |
+| pip / npm | latest | Package managers |
+| Git | any | For cloning + applying the Curio patch |
+| **Google Maps API key** | — | Required for live Street View — needs both Static + Metadata APIs enabled |
+| HuggingFace token | — | *Optional*, only for private/gated models |
+
+### 1 — Clone
+
+```bash
+git clone https://github.com/ManeeshJupalle/Street-Level-Vision-Analytics-Node-for-Curio.git
+cd Street-Level-Vision-Analytics-Node-for-Curio
+```
+
+### 2 — Backend (Python, FastAPI, port 8000)
+
+```bash
+# Create and activate a virtual environment at the repo root
+python -m venv .venv
+source .venv/bin/activate            # macOS / Linux
+# .venv\Scripts\Activate.ps1          # Windows PowerShell
+
+# Install pinned dependencies
+pip install -r requirements.txt
+
+# Configure environment
+cp .env.example .env                  # then add GOOGLE_MAPS_API_KEY=AIza...
+```
+
+> **Pinning policy.** `requirements.txt` is fully pinned (every dependency at the version used
+> to produce the results in [`evaluation/`](evaluation/)). To upgrade: bump a version, re-run
+> `pytest backend/tests/` and `python -m evaluation.performance_benchmarks.benchmark`, then
+> regenerate the file from `pip freeze`.
+
+### 3 — Frontend (React 19, Vite)
+
+```bash
+cd frontend
+npm install
+```
+
+### 4 — Curio integration (only if you don't already have the bundled fork)
+
+If you cloned this repo with the `curio/` directory present, skip this step. Otherwise:
+
+```bash
+# Clone Curio next to this repo
+git clone https://github.com/urban-toolkit/curio.git
+
+# Apply the lifecycle hooks + descriptor patch
+cp curio-integration/streetVisionLifecycle.tsx \
+   curio/utk_curio/frontend/urban-workflows/src/adapters/box/
+cp curio-integration/cvAnalysisLifecycle.tsx \
+   curio/utk_curio/frontend/urban-workflows/src/adapters/box/
+cd curio && git apply ../curio-integration/curio-fork.patch
+```
+
+Full step-by-step install + troubleshooting: [`docs/setup.md`](docs/setup.md).
 
 ---
 
 ## Dataset Access
 
-### Google Maps API Key
+### Google Street View (primary imagery source)
 
-This project uses the [Google Street View Static API](https://developers.google.com/maps/documentation/streetview). To enable image fetching:
+The system fetches images live from the Google Street View Static API. To enable it:
 
-1. Create a Google Cloud project
-2. Enable the **Street View Static API** and **Street View Metadata API**
-3. Create an API key and restrict it as needed
-4. Add it to your `.env`:
+1. Create or select a project in the [Google Cloud Console](https://console.cloud.google.com/).
+2. **APIs & Services → Library**, enable both:
+   - **Street View Static API**
+   - **Street View Metadata API** (used for free coverage probing — does not consume image quota)
+3. **APIs & Services → Credentials**, create an API key (and restrict it to the two APIs above).
+4. Add it to `.env`:
+   ```env
+   GOOGLE_MAPS_API_KEY=AIza...your_key_here
    ```
-   GOOGLE_MAPS_API_KEY=AIza...
-   ```
+5. Restart the backend. `GET /api/health` should now report `"has_google_api_key": true` and
+   `"demo_mode": false`.
 
-The Metadata API is free — coverage checks and bbox sampling do not count against your image quota. Only full-image downloads consume it.
+> **Why we don't redistribute imagery.** Google Street View imagery is licensed and cannot be
+> bundled with the repo. The Metadata API checks coverage for free, so users can sweep large
+> areas to plan a run before spending image quota.
 
----
+### Local-folder fallback (for offline reproducibility)
 
-## Quick Demo
+If you don't have a Google Maps key, point the **Folder** data source at any directory of
+local `.jpg / .png / .webp` files. Inference runs identically; the only thing missing is the
+geocoding step. A small set of cached Mapillary/Street-View test images lives in
+[`cache/`](cache/) for sanity-checking the pipeline end-to-end without an API key.
 
-1. Start backend (`uvicorn backend.main:app --reload --port 8000`) and frontend (`cd frontend && npm run dev`)
-2. Open `http://localhost:5173`
-3. **Step 1** — Search `cityscapes`, select `segformer-b2-finetuned-cityscapes-1024-1024`
-4. **Step 2** — Pick **Street View**, type `Lincoln Park Chicago`, hit Enter, choose a result, click **Check Coverage**
-5. **Step 3** — Click chips: `vegetation`, `road`, `building`, `sidewalk`, `sky`
-6. Click **Run Analysis** — real SegFormer inference runs on images fetched from Google Street View
-7. Browse the gallery, click any card to open the inspector with real segmentation overlays
-8. In Curio: drag **Street Vision** → **CV Analysis** → two **Vega-Lite** nodes. On one Vega-Lite node click **Templates** → **Street Vision — Map View** to render the Chicago basemap with searched neighborhoods colored and labelled. Leave the other Vega-Lite node on the default stacked-bar spec for per-image class composition.
+### Chicago basemap (bundled)
 
----
+`data/chicago_neighborhoods.geojson` — a curated 98-polygon Chicago neighborhood basemap, served
+by `GET /api/data/basemap/chicago_neighborhoods.geojson` with WGS84 centroids injected into each
+feature's `properties` so the Map View label layer can render without a Vega `geoCentroid`
+expression.
 
-## Case Studies
+### Class definitions (bundled)
 
-### Chicago Greenery Assessment
-- **Model:** SegFormer (semantic segmentation, `nvidia/segformer-b2-finetuned-cityscapes-1024-1024`)
-- **Data:** Google Street View images from Chicago neighborhoods
-- **Classes:** vegetation, sidewalk, road, building, sky
-- **Output:** Per-image greenery percentage, per-class breakdown, spatial aggregation
+CSVs in [`data/class_definitions/`](data/class_definitions/):
 
-### Vehicle Counting
-- **Model:** YOLOv8 (object detection)
-- **Data:** Local camera folder or Google Street View
-- **Classes:** car, truck, motorcycle, bicycle
-- **Output:** Object counts per image, bounding box visualization
+- `cityscapes_19.csv` — the 19 standard Cityscapes classes (default segmentation taxonomy).
+- `street_furniture.csv` — benches, trash cans, bike racks, ramps (used by Task 2 / Task 5).
+- `vegetation.csv` — vegetation-only subset for greenery-focused runs.
 
 ---
 
-## Evaluation
+## How to Run
 
-Our evaluation focuses on **what new analytical tasks the node enables**, not CV model accuracy:
+The full deployment uses **four** local servers. Run each in its own terminal.
 
-1. **Task inventory** — 7 specific analytical tasks newly enabled by the node (see [`evaluation/task_inventory.md`](evaluation/task_inventory.md))
-2. **Case study walkthrough** — End-to-end Chicago greenery analysis with real SegFormer on Street View imagery
-3. **Configuration generality** — Same node reconfigured for vehicle counting (model swap, no code changes)
-4. **Multi-node dataflow** — Demonstrates Curio's value proposition by splitting data acquisition (Street Vision) from analysis/visualization (CV Analysis) across a dataflow graph
+| # | Service | Port | Command |
+| --- | --- | --- | --- |
+| 1 | Curio Flask backend | 5002 | `cd curio && python -c "from utk_curio.backend.app import create_app; create_app().run(host='localhost', port=5002)"` |
+| 2 | Street Vision FastAPI backend | 8000 | `uvicorn backend.main:app --reload --port 8000` |
+| 3 | Street Vision frontend (embedded by Curio) | 5173 | `cd frontend && npm run dev` |
+| 4 | Curio webpack frontend | 3000 | `cd curio/utk_curio/frontend/urban-workflows && npx webpack serve --mode development --port 3000` |
+
+Then open **`http://localhost:3000`** (the Curio canvas), drag **Street Vision** and **CV
+Analysis** out of the node palette, and connect Street Vision's JSON output to CV Analysis's
+JSON input.
+
+### Quick Demo (Chicago greenery)
+
+1. Open `http://localhost:3000`.
+2. Add a **Street Vision** node and a **CV Analysis** node; wire them together.
+3. Inside Street Vision: search `cityscapes`, select
+   `nvidia/segformer-b2-finetuned-cityscapes-1024-1024` (or the auto-pick top result).
+4. Type `Lincoln Park Chicago`, hit Enter, choose a result, click **Check Coverage**.
+5. Pick chips: `vegetation`, `road`, `building`, `sidewalk`, `sky`. Click **Run Analysis**.
+6. Add two **Vega-Lite** nodes downstream of CV Analysis. On one, click **Templates → Street
+   Vision — Map View** to render the Chicago basemap with searched neighborhoods coloured by
+   their dominant Cityscapes class. Leave the other on the default stacked-bar template for
+   per-image class composition.
+7. Optionally add a **Table** node to inspect the raw per-image rows.
 
 ---
 
-## Results & Reproducibility
+## Reproducing Key Results
 
-Every artifact under [`evaluation/`](evaluation/) is reproducible from the pinned dependencies in `requirements.txt` and `frontend/package-lock.json`.
+The two case studies ship as JSON config files; both can be replayed by running the same
+configuration against a live (or folder-fallback) data source.
 
-### Where the artifacts live
+### Case Study 1 — Chicago greenery
 
-| Artifact | File | Produced by |
-|---|---|---|
-| Latency benchmark numbers | [`evaluation/performance_benchmarks/results.json`](evaluation/performance_benchmarks/results.json) | `python -m evaluation.performance_benchmarks.benchmark` |
-| Latency chart | [`evaluation/performance_benchmarks/latency_chart.png`](evaluation/performance_benchmarks/latency_chart.png) | Same script (auto-generated) |
-| Backend unit test results | (CI-style, no checked-in artifact) | `pytest backend/tests/` |
-| Case-study configurations | [`evaluation/case_studies/chicago_greenery/config.json`](evaluation/case_studies/chicago_greenery/config.json), [`vehicle_counting/config.json`](evaluation/case_studies/vehicle_counting/config.json) | Hand-authored — load into the frontend Config Panel |
-| Task inventory | [`evaluation/task_inventory.md`](evaluation/task_inventory.md) | Hand-authored, derived from the Cityscapes / street-furniture class definitions in [`data/class_definitions/`](data/class_definitions/) |
+Config: [`evaluation/case_studies/chicago_greenery/config.json`](evaluation/case_studies/chicago_greenery/config.json)
 
-### How to reproduce each result
+| Field | Value |
+| --- | --- |
+| Model | `nvidia/segformer-b2-finetuned-cityscapes-1024-1024` (segmentation) |
+| Bounding box | `[-87.66, 41.91, -87.62, 41.94]` (Lincoln Park) |
+| Classes | `vegetation, road, building, sidewalk, sky` |
+| Primary metric | Vegetation pixel ratio per image |
+| Aggregation | Mean per neighborhood (server-side STRtree join) |
+| Output | GeoJSON FeatureCollection |
+
+To reproduce: run the four servers above, drag Street Vision + CV Analysis onto the canvas,
+enter the bbox / classes / model from the config file, click **Run Analysis**.
+
+### Case Study 2 — Vehicle counting
+
+Config: [`evaluation/case_studies/vehicle_counting/config.json`](evaluation/case_studies/vehicle_counting/config.json)
+
+| Field | Value |
+| --- | --- |
+| Model | `ultralytics/yolov8n` (detection) |
+| Bounding box | `[-87.64, 41.875, -87.62, 41.885]` (The Loop) |
+| Classes | `car, truck, bus, motorcycle, bicycle` |
+| Primary metric | Object count per class per image |
+| Output | GeoJSON FeatureCollection |
+
+This is the configuration-generality claim made concrete: **same node, same wiring, zero code
+changes** between the two case studies — only the model and the class chips change.
+
+### Performance benchmark
 
 ```bash
-# 1. Install pinned dependencies (Python + Node)
-pip install -r requirements.txt
-cd frontend && npm ci && cd ..
-
-# 2. Reproduce the latency benchmark — regenerates results.json + latency_chart.png
 python -m evaluation.performance_benchmarks.benchmark
-
-# 3. Run the backend test suite
-pytest backend/tests/ -v
-
-# 4. Reproduce a case study end-to-end
-#    a. Start backend + frontend (see "Setup" above)
-#    b. Open http://localhost:5173
-#    c. Open evaluation/case_studies/chicago_greenery/config.json — copy each field
-#       into the matching Config Panel control (model, bbox, class chips)
-#    d. Click "Run Analysis" — gallery streams in, GeoJSON exports via the
-#       /api/inference/results/{job_id}/geojson endpoint
-#    e. Repeat with vehicle_counting/config.json (swaps the model to YOLOv8)
 ```
 
-> The case-study `config.json` files are reference inputs — they describe the exact configuration we used so the run is reproducible, not automation scripts. The Curio canvas demo (Street Vision → CV Analysis → Vega-Lite) is reproduced by following the **Quick Demo** section above.
+Headline result (4-core CPU, SegFormer-B2 @ 1024×1024):
+
+- **0.30 s per image**, ±0.0001 s across four runs
+- ~3.32 images/s end-to-end (HTTP + post-processing included)
+
+Full discussion of what the data does and *does not* support (no scaling curve, because the
+demo-mode 20-image cap clamped the larger batch sizes):
+[`evaluation/performance_benchmarks/README.md`](evaluation/performance_benchmarks/README.md).
+
+---
+
+## Results Artifacts
+
+| Artifact | Where it lives | How it was produced |
+| --- | --- | --- |
+| Per-image inference latency | [`evaluation/performance_benchmarks/results.json`](evaluation/performance_benchmarks/results.json) | `python -m evaluation.performance_benchmarks.benchmark` |
+| Case study configs | [`evaluation/case_studies/*/config.json`](evaluation/case_studies/) | Hand-authored from M2 / M3 runs |
+| Task inventory (7 tasks) | [`evaluation/task_inventory.md`](evaluation/task_inventory.md) | Manual — analytical tasks newly enabled by the node |
+| Paper figures | [`paper/figures/`](paper/figures/) | Curio canvas screenshots (teaser, wizard, inspector) + hand-authored architecture diagram |
+| 4-page IEEE VGTC paper | [`paper/main.tex`](paper/main.tex) | LaTeX (compile via Overleaf or `pdflatex`) |
+| Chicago basemap | [`data/chicago_neighborhoods.geojson`](data/chicago_neighborhoods.geojson) | Curated 98-polygon GeoJSON, served with centroids injected at request time |
+
+Every artifact above is reproducible from the pinned dependencies in `requirements.txt` and
+`frontend/package-lock.json`. To regenerate the benchmark numbers and run the backend test suite:
+
+```bash
+pip install -r requirements.txt
+python -m evaluation.performance_benchmarks.benchmark   # → results.json
+pytest backend/tests/ -v
+```
+
+The case-study `config.json` files are *reference inputs*, not automation scripts — they
+describe the exact bbox / model / class set we used so a future run can be reproduced inside
+the Curio canvas. See the [Quick Demo](#quick-demo-chicago-greenery) above for the click-by-click
+walkthrough.
 
 ---
 
 ## API Reference
 
-See [docs/api_reference.md](docs/api_reference.md) for complete endpoint documentation with request/response examples.
+Full request/response examples in [`docs/api_reference.md`](docs/api_reference.md). Summary:
 
 | Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/health` | GET | Health check and API-key status |
+| --- | --- | --- |
+| `/api/health` | GET | Health + API-key status |
 | `/api/models/search` | GET | Search HuggingFace models by task |
 | `/api/models/{id}/info` | GET | Get model metadata |
-| `/api/models/load` | POST | Load model into memory |
-| `/api/data/streetview/search_place` | GET | Geocode a place name → bbox |
+| `/api/models/load` | POST | Load model into the process-wide cache |
+| `/api/data/streetview/search_place` | GET | Geocode a place name → bbox (Nominatim) |
 | `/api/data/streetview/coverage` | POST | Estimate Street View coverage for a bbox |
 | `/api/data/streetview/fetch` | POST | Fetch panorama metadata in a bbox |
-| `/api/data/basemap/chicago_neighborhoods.geojson` | GET | Serve the Chicago basemap with `centroid_lon` / `centroid_lat` injected per feature |
-| `/api/data/basemap/enrich_with_neighborhoods` | POST | Tag each input point with its Chicago neighborhood and return per-neighborhood aggregates |
-| `/api/data/folder/load` | POST | Load images from local folder |
-| `/api/inference/run` | POST | Start async inference job |
+| `/api/data/basemap/chicago_neighborhoods.geojson` | GET | Serve the basemap with `centroid_lon` / `centroid_lat` injected |
+| `/api/data/basemap/enrich_with_neighborhoods` | POST | Tag each input point with its neighborhood + per-neighborhood aggregates |
+| `/api/data/folder/load` | POST | Load images from a local folder |
+| `/api/inference/run` | POST | Start an async inference job |
 | `/api/inference/status/{id}` | GET | Poll job progress |
-| `/api/inference/results/{id}` | GET | Get job results |
-| `/api/inference/results/{id}/geojson` | GET | Export results as GeoJSON |
-| `/api/inference/results/{id}/dataframe` | GET | Export results as column/row DataFrame |
-| `/api/inference/results/{id}/curio_export` | GET | Save as Curio-native `.data` file |
+| `/api/inference/results/{id}` | GET | Get full job results |
+| `/api/inference/results/{id}/geojson` | GET | Export results as a GeoJSON FeatureCollection |
+| `/api/inference/results/{id}/dataframe` | GET | Export results as a column/row DataFrame |
+| `/api/inference/results/{id}/curio_export` | GET | Save as a Curio-native `.data` file |
+
+Interactive Swagger docs: `http://127.0.0.1:8000/docs` once the backend is running.
 
 ---
 
-## Citation
+## Documentation
 
-If you reference this project, please cite as:
-
-```
-Rachakonda, L. S., & Jupalle, L. S. M. R. (2026).
-Street-Level Vision Analytics Node for Curio: A two-node CV pipeline for urban analysts.
-CS 524 Final Project, University of Illinois Chicago.
-```
+- [`docs/setup.md`](docs/setup.md) — full installation + troubleshooting
+- [`docs/architecture.md`](docs/architecture.md) — three-layer walkthrough (Curio nodes,
+  frontend, backend), with module-by-module breakdown
+- [`docs/api_reference.md`](docs/api_reference.md) — endpoint spec with examples
+- [`evaluation/task_inventory.md`](evaluation/task_inventory.md) — the seven analytical tasks
+  the node enables, with "how it was done before" baselines
+- [`curio-integration/README.md`](curio-integration/README.md) — how to graft the two nodes
+  onto a clean Curio clone
+- [`paper/README.md`](paper/README.md) — paper-build instructions
 
 ---
 
-## License
+## Adding Demo Media
 
-This project is developed for academic purposes as part of CS 524 at the University of Illinois Chicago.
+This is reference material for the team to refresh when new media is recorded.
+
+### Screenshots
+
+1. Take screenshots from the Curio canvas at `http://localhost:3000` (the deliverable shows the
+   Curio integration, not the standalone frontend).
+2. Save them as PNGs under [`paper/figures/`](paper/figures/) — keep the existing names
+   (`teaser_curio_canvas`, `config_wizard`, `gallery_inspector`, `architecture`) so both the
+   README and the LaTeX paper pick them up automatically.
+3. Commit and push. The README image links resolve relative to the repo root, so they will
+   render on github.com without further configuration.
+
+### Walkthrough video
+
+GitHub README files cannot embed `<video>` tags directly, but you have three good options:
+
+1. **Convert to GIF (recommended for short clips, < 10 MB).**
+   - On Windows: install [ScreenToGif](https://www.screentogif.com/), record the canvas, save as
+     `paper/figures/walkthrough.gif`.
+   - Reference it in the README with `![Walkthrough](paper/figures/walkthrough.gif)` — it will
+     auto-play on github.com.
+
+2. **Upload an `.mp4` directly to the GitHub README via the web UI.**
+   - Go to your repo on github.com → click `README.md` → click the pencil ✏️ to edit.
+   - Drag-and-drop the `.mp4` file into the editor where you want the video. GitHub uploads it
+     to its CDN and inserts a Markdown link of the form
+     `https://github.com/user-attachments/assets/<uuid>.mp4`.
+   - Commit the change. The video will play inline on the rendered README (up to 100 MB).
+
+3. **Host on YouTube / Vimeo and link with a thumbnail.**
+   - Upload the video unlisted to YouTube.
+   - Take a still frame, save as `paper/figures/walkthrough_thumb.png`.
+   - Reference like:
+     ```markdown
+     [![Walkthrough](paper/figures/walkthrough_thumb.png)](https://youtu.be/<video_id>)
+     ```
+   - Clicking the thumbnail opens YouTube in a new tab.
+
+For the **CS 524 deliverable**, option 1 (GIF) or option 2 (uploaded `.mp4`) is preferable
+because the demo stays inside the repo. After uploading, replace the placeholder block in the
+[Demo](#demo) section.
+
+### Suggested clip structure (~90 s total)
+
+1. *(0:00)* Curio canvas opens, palette visible — drag Street Vision + CV Analysis onto canvas.
+2. *(0:15)* Three-step wizard inside Street Vision: model search → place search → class chips.
+3. *(0:35)* Click **Run Analysis**; show progress bar + streaming gallery.
+4. *(0:55)* Open the Image Inspector on a result; toggle source / overlay / side-by-side.
+5. *(1:10)* Connect two Vega-Lite nodes downstream; pick the **Map View** template.
+6. *(1:25)* Pan the Map View — Lincoln Park coloured green by vegetation modal class.
+
+---
+
+## Citation & License
+
+This project was developed for academic purposes as part of CS 524 at the University of
+Illinois Chicago. The companion 4-page IEEE VGTC paper is in [`paper/main.tex`](paper/main.tex).
+
+If you build on this work, please cite:
+
+```bibtex
+@misc{rachakonda_jupalle_2026_street_vision_curio,
+  author       = {L. Sravya Rachakonda and Laxmi Sai Maneesh Reddy Jupalle},
+  title        = {A Configurable Street-Level Vision Node for Curio:
+                  Bringing Pre-Trained CV into Urban Visual Analytics Workflows},
+  year         = {2026},
+  note         = {CS 524: Big Data Visual Analytics, University of Illinois Chicago},
+  howpublished = {\url{https://github.com/ManeeshJupalle/Street-Level-Vision-Analytics-Node-for-Curio}}
+}
+```
+
+The Curio platform itself is the work of the original Curio authors at NYU VIDA — see
+[urban-toolkit/curio](https://github.com/urban-toolkit/curio) for their license and citation.
