@@ -65,7 +65,10 @@ special-casing.
 A two-minute end-to-end walkthrough — model selection, place search, run, image inspector,
 Vega-Lite Map View — runs inline below.
 
-https://github.com/user-attachments/assets/d3bbe6f6-0fc1-4af1-a146-e08c11fbe91f
+
+https://github.com/user-attachments/assets/2d75b354-8ef7-4607-acbf-d7bc316a2684
+
+
 
 ### Screenshots
 
