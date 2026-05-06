@@ -56,7 +56,8 @@ instructor feedback in M2: it forces a clean serialization boundary between infe
 visualization, and the GeoJSON output slots into Curio's existing visualization nodes with no
 special-casing.
 
-**Read the paper:** [`paper/CS524_Street-Level Vision Node for Curio_Report.pdf`](paper/CS524_Street-Level%20Vision%20Node%20for%20Curio_Report.pdf) (4-page IEEE VGTC format, with figures and references)
+[Read the paper](paper/CS524_Street-Level%20Vision%20Node%20for%20Curio_Report.pdf) (PDF, 4-page IEEE VGTC format with figures and references).
+
 ---
 
 ## Demo
