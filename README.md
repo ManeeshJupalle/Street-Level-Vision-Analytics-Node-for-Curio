@@ -43,17 +43,17 @@ tree canopy, sidewalk condition, vehicle composition, accessibility infrastructu
 catch is workflow friction.** An urban planner asking *"which Lincoln Park blocks have less
 than 10% sidewalk?"* currently has to learn the HuggingFace API, write image-fetching code
 against the Street View Static API, manage a CUDA environment, run inference, then stitch the
-results into a GIS pipeline alongside census tracts. The CV is the easy part; the plumbing is
+results into a GIS pipeline alongside census tracts. The CV is the easy part; The plumbing is
 what blocks adoption.
 
 This project closes that gap by extending Curio with a **two-node CV pipeline**:
 
 - **Street Vision**: Model selection, place-name search, Google Street View sampling, inference.
-- **CV Analysis**: Gallery / inspector UI, server-side neighborhood enrichment, GeoJSON +
+- **CV Analysis**: Gallery/Inspector UI, server-side neighborhood enrichment, GeoJSON +
   DataFrame export to downstream Vega-Lite and UTK nodes.
 
 Splitting the work across two nodes (rather than one monolithic widget) was a direct response to
-instructor feedback in M2: it forces a clean serialization boundary between inference and
+Instructor feedback in M2: it forces a clean serialization boundary between inference and
 visualization, and the GeoJSON output slots into Curio's existing visualization nodes with no
 special-casing.
 
