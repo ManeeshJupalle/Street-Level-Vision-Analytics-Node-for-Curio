@@ -7,7 +7,7 @@
 
 **CS 524: Big Data Visual Analytics, Spring 2026, Group 13**
 **Authors:** Lakshmi Sravya Rachakonda · Laxmi Sai Maneesh Reddy Jupalle
-**University of Illinois Chicago**
+**- University of Illinois Chicago**
 
 <p align="center">
   <img src="paper/figures/teaser_curio_canvas.png" alt="Curio canvas with Street Vision feeding CV Analysis, which fans out to a Vega-Lite Map View, a per-neighborhood bar chart, and a Table node." width="92%">
