@@ -5,9 +5,10 @@
 > detection model, type a Chicago place name, and route the per-image and per-neighborhood
 > outputs into Curio's existing Vega-Lite, Map, and Table nodes, all without writing Python.
 
-**CS524 - Big Data Visualization and Analytics (Spring 2026), Group 13**
 **Authors:** Lakshmi Sravya Rachakonda · Laxmi Sai Maneesh Reddy Jupalle
-**- University of Illinois Chicago**
+**Group 13**
+**CS524 - Big Data Visualization and Analytics (Spring 2026)**
+**University of Illinois Chicago**
 
 <p align="center">
   <img src="paper/figures/teaser_curio_canvas.png" alt="Curio canvas with Street Vision feeding CV Analysis, which fans out to a Vega-Lite Map View, a per-neighborhood bar chart, and a Table node." width="92%">
