@@ -69,7 +69,10 @@ A two-minute end-to-end walkthrough (model selection, place search, run, image i
 Vega-Lite Map View) runs inline below.
 
 
-https://github.com/user-attachments/assets/2d75b354-8ef7-4607-acbf-d7bc316a2684
+
+https://github.com/user-attachments/assets/1de3b970-e771-4616-8c72-c0f85e70814c
+
+
 
 
 
