@@ -5,9 +5,9 @@
 > detection model, type a Chicago place name, and route the per-image and per-neighborhood
 > outputs into Curio's existing Vega-Lite, Map, and Table nodes, all without writing Python.
 
-**Authors:** Lakshmi Sravya Rachakonda · Laxmi Sai Maneesh Reddy Jupalle
-**Group 13**
-**CS524 - Big Data Visualization and Analytics (Spring 2026)**
+**Authors:** Lakshmi Sravya Rachakonda · Laxmi Sai Maneesh Reddy Jupalle<br>
+**Group 13**<br>
+**CS524 - Big Data Visualization and Analytics (Spring 2026)**<br>
 **University of Illinois Chicago**
 
 <p align="center">
