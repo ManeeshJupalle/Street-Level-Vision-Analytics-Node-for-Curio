@@ -10,7 +10,7 @@
 **University of Illinois Chicago**
 
 <p align="center">
-  <img src="paper/figures/teaser_curio_canvas.png.png" alt="Curio canvas with Street Vision feeding CV Analysis, which fans out to a Vega-Lite Map View, a per-neighborhood bar chart, and a Table node." width="92%">
+  <img src="paper/figures/teaser_curio_canvas.png" alt="Curio canvas with Street Vision feeding CV Analysis, which fans out to a Vega-Lite Map View, a per-neighborhood bar chart, and a Table node." width="92%">
 </p>
 
 ---
@@ -74,7 +74,7 @@ https://github.com/user-attachments/assets/2d75b354-8ef7-4607-acbf-d7bc316a2684
 
 | Curio canvas (teaser) | Configuration wizard | Image inspector |
 | :---: | :---: | :---: |
-| ![Teaser](paper/figures/teaser_curio_canvas.png.png) | ![Wizard](paper/figures/config_wizard.png.png) | ![Inspector](paper/figures/gallery_inspector.png.png) |
+| ![Teaser](paper/figures/teaser_curio_canvas.png) | ![Wizard](paper/figures/config_wizard.png) | ![Inspector](paper/figures/gallery_inspector.png) |
 | Street Vision → CV Analysis → Map View + Bar Chart + Table | Three-step wizard inside the Street Vision node | Source photo + Mask2Former overlay + class breakdown |
 
 ---
@@ -105,7 +105,7 @@ https://github.com/user-attachments/assets/2d75b354-8ef7-4607-acbf-d7bc316a2684
 ## System Architecture
 
 <p align="center">
-  <img src="paper/figures/architecture.png.png" alt="Architecture diagram: external APIs (HuggingFace, Google Street View, Nominatim) feed the Street Vision node (configuration panel, inference, cache); JSON crosses into the CV Analysis node (consume JSON, spatial enrichment via STRtree, per-neighborhood roll-ups, multi-format export); user-facing outputs are the results gallery, image inspector, Vega-Lite bar and map, and Curio downstream nodes." width="92%">
+  <img src="paper/figures/architecture.png" alt="Architecture diagram: external APIs (HuggingFace, Google Street View, Nominatim) feed the Street Vision node (configuration panel, inference, cache); JSON crosses into the CV Analysis node (consume JSON, spatial enrichment via STRtree, per-neighborhood roll-ups, multi-format export); user-facing outputs are the results gallery, image inspector, Vega-Lite bar and map, and Curio downstream nodes." width="92%">
 </p>
 
 A more detailed walkthrough of the three layers (Curio nodes, frontend, backend) lives in
