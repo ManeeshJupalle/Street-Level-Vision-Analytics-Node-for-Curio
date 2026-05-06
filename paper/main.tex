@@ -13,8 +13,9 @@
 \title{A Configurable Street-Level Vision Node for Curio: Bringing Pre-Trained CV into Urban Visual Analytics Workflows}
 
 \author{%
-  L.~Sravya Rachakonda \and
-  Laxmi Sai Maneesh Reddy Jupalle
+  L.~Sravya Rachakonda \hspace{2.5em} Laxmi Sai Maneesh Reddy Jupalle
+  \\[4pt]
+  \normalfont University of Illinois at Chicago
 }
 
 %% Author footer disabled per request. Restore by uncommenting if VGTC reviewers require affiliations.
@@ -32,6 +33,14 @@
 %% (manuscript-received line + Digital Object Identifier line).
 \renewcommand{\manuscriptnotetxt}{}
 \nocopyrightspace
+
+%% Suppress the decorative diamond-rule separator between abstract and body.
+\renewcommand{\diamondrule}{}
+\let\diamondrule\relax
+
+%% Suppress the page-header rule on continuation pages.
+\renewcommand{\headrule}{}
+\renewcommand{\headrulewidth}{0pt}
 
 \abstract{%
   Urban analysts increasingly want to derive block-level signals (greenery, sidewalk coverage, vehicle composition, accessibility infrastructure) from street-level imagery, but the existing path requires custom Python scripts, model loading boilerplate, and ad-hoc spatial joins that put computer vision (CV) out of reach for non-programmers. We extend Curio, a node-based urban visual analytics platform, with a two-node CV pipeline: a \emph{Street Vision} node that performs place-name search, Google Street View sampling, and pre-trained model inference, and a \emph{CV Analysis} node that handles result inspection, per-class metrics, neighborhood enrichment, and GeoJSON/DataFrame export to downstream Vega-Lite and UTK nodes. Users select any HuggingFace segmentation or detection checkpoint via the in-node search; our demo uses Mask2Former-Swin-Large on Cityscapes for segmentation and supports YOLOv8 for detection. We demonstrate the system on a Chicago greenery assessment and a vehicle-counting case study, document seven newly enabled analytical tasks, and report representative inference latency on CPU. The paper closes with limitations around demo-mode batch caps, the fixed Cityscapes taxonomy, and the spatial sparsity of Street View metadata coverage.
@@ -67,18 +76,18 @@
 
 Cities now publish or stream petabyte-scale street-level imagery (Google Street View, Mapillary, municipal LiDAR rigs), and a decade of computer-vision research has shown that pre-trained semantic segmentation and object detection models can extract policy-relevant signals from those images: tree canopy~\cite{Li2015AssessingStreetlevelUrban}, sidewalk condition, vehicle composition~\cite{Gebru2017UsingDeepLearning}, and pedestrian infrastructure. The catch is workflow friction. An urban planner asking ``which Lincoln Park blocks have less than 10\% sidewalk?'' has to learn HuggingFace's API~\cite{Wolf2020TransformersStateoftheartNatural}, write image-fetching code against the Street View Static API, manage a CUDA environment, run inference, then stitch the results into a GIS workflow alongside census tracts. The CV is the easy part; the plumbing is what blocks adoption.
 
-Node-based visual analytics platforms such as Curio~\cite{Moreira2024CurioDataflowFramework}, KNIME~\cite{Berthold2009KNIMEKonstanzInformation}, and Orange~\cite{Demsar2013OrangeDataMining} were designed to remove exactly this kind of plumbing for tabular and geospatial workflows, but none of them ship a node that runs a pre-trained CV model on live street imagery. We close that gap. Our contribution is a \emph{two-node} extension to Curio that handles model selection, place-name search, Street View sampling, inference, neighbourhood enrichment, and export to Vega-Lite and UTK, all behind a configuration UI that exposes no Python (\autoref{fig:teaser}). Concretely we contribute (1) a \textbf{Street Vision} node that wraps HuggingFace model search and Google Street View sampling behind a place-name interface, (2) a \textbf{CV Analysis} node that performs server-side spatial joins against Chicago neighborhood polygons and emits both GeoJSON and DataFrame outputs, and (3) a Curio-native Vega-Lite \emph{Map View} template that renders neighborhoods coloured by their modal Cityscapes class. We evaluate via a seven-task analytical inventory and two case studies (Chicago greenery; vehicle counting in The Loop).
+Node-based visual analytics platforms such as Curio~\cite{Moreira2024CurioDataflowFramework} and KNIME~\cite{Berthold2009KNIMEKonstanzInformation} were designed to remove exactly this kind of plumbing for tabular and geospatial workflows, but none of them ship a node that runs a pre-trained CV model on live street imagery. We close that gap. Our contribution is a \emph{two-node} extension to Curio that handles model selection, place-name search, Street View sampling, inference, neighbourhood enrichment, and export to Vega-Lite and UTK, all behind a configuration UI that exposes no Python (\autoref{fig:teaser}). Concretely we contribute (1) a \textbf{Street Vision} node that wraps HuggingFace model search and Google Street View sampling behind a place-name interface, (2) a \textbf{CV Analysis} node that performs server-side spatial joins against Chicago neighborhood polygons and emits both GeoJSON and DataFrame outputs, and (3) a Curio-native Vega-Lite \emph{Map View} template that renders neighborhoods coloured by their modal Cityscapes class. We evaluate via a seven-task analytical inventory and two case studies (Chicago greenery; vehicle counting in The Loop).
 
 \section{Related Work}
 \label{sec:related}
 
-\textbf{Urban visual analytics platforms.} Curio~\cite{Moreira2024CurioDataflowFramework} introduced a dataflow abstraction for urban analytics that lets analysts wire together data acquisition, transformation, and visualization nodes; the underlying Urban Toolkit (UTK)~\cite{Moreira2023UrbanToolkitGrammar} provides a grammar for thematic urban maps. Earlier systems such as Urbane~\cite{Ferreira2015UrbaneFrameworkAnalysis} and Urban Pulse~\cite{Miranda2017UrbanPulseTemporalApproach} establish urban analytics as a discipline that benefits from interactive, multi-view systems but historically treats CV outputs as pre-computed inputs rather than a node in the live graph. Our work integrates the inference step itself into the graph.
+\textbf{Urban visual analytics platforms.} Curio~\cite{Moreira2024CurioDataflowFramework} introduced a dataflow abstraction for urban analytics that lets analysts wire together data acquisition, transformation, and visualization nodes; the underlying Urban Toolkit (UTK)~\cite{Moreira2023UrbanToolkitGrammar} provides a grammar for thematic urban maps. These platforms benefit from interactive, multi-view design but historically treat CV outputs as pre-computed inputs rather than a node in the live graph. Our work integrates the inference step itself into the graph.
 
-\textbf{Street-level imagery analysis.} A robust line of work uses street-level imagery to infer block- or neighborhood-scale attributes. Treepedia~\cite{Li2015AssessingStreetlevelUrban} estimated street-level greenery from Google Street View at city scale; Place Pulse~\cite{Naik2014StreetscorePredictingPerceived} crowdsourced perceived-safety scores; Gebru et al.~\cite{Gebru2017UsingDeepLearning} used vehicle make/model recognition over 50M Street View images to infer demographics. These studies are typically one-off pipelines authored in research code; we package the workflow as reusable nodes so non-programmers can re-run the same kind of analysis on new bounding boxes or with substituted models.
+\textbf{Street-level imagery analysis.} Prior work uses street-level imagery to infer block- or neighborhood-scale attributes: Treepedia~\cite{Li2015AssessingStreetlevelUrban} estimated street-level greenery from Google Street View at city scale, and Gebru et al.~\cite{Gebru2017UsingDeepLearning} used vehicle make/model recognition over 50M Street View images to infer demographics. These studies are typically one-off pipelines in research code; we package the workflow as reusable nodes so non-programmers can re-run the same kind of analysis on new bounding boxes or with substituted models.
 
 \textbf{Pre-trained CV for cities.} SegFormer~\cite{Xie2021SegFormerSimpleEfficient} achieves state-of-the-art accuracy on the Cityscapes 19-class urban benchmark~\cite{Cordts2016CityscapesDatasetSemantic}, and YOLOv8~\cite{Jocher2023YOLOv8} provides fast object detection on commodity CPUs. The HuggingFace Hub~\cite{Wolf2020TransformersStateoftheartNatural} aggregates thousands of such checkpoints; we expose the Hub's search API directly inside the Street Vision node so users can swap models without code changes. We treat the transferability of Cityscapes-trained models to U.S. street imagery as a working assumption rather than a contribution.
 
-\textbf{No-code visual analytics.} Lyra~\cite{Satyanarayan2014LyraInteractiveVisualization}, Vega-Lite~\cite{Satyanarayan2017VegaLiteGrammarInteractive}, KNIME~\cite{Berthold2009KNIMEKonstanzInformation}, and Tableau define the modern expectation that data analysts work without writing imperative code. Our extension follows that tradition: every parameter the user might want to change (model, location, target classes, filtering operator) is a UI control, not a Python edit. Where we differ from Lyra-style chart authoring is that the heavy work (CV inference) happens server-side and only the resulting GeoJSON is shipped to the client.
+\textbf{No-code visual analytics.} Vega-Lite~\cite{Satyanarayan2017VegaLiteGrammarInteractive}, KNIME~\cite{Berthold2009KNIMEKonstanzInformation}, and Tableau define the modern expectation that data analysts work without writing imperative code. Our extension follows that tradition: every parameter the user might want to change (model, location, target classes, filtering operator) is a UI control, not a Python edit. The heavy work (CV inference) happens server-side and only the resulting GeoJSON is shipped to the client.
 
 \section{Data and Tasks}
 \label{sec:data}
@@ -138,12 +147,12 @@ Node-based visual analytics platforms such as Curio~\cite{Moreira2024CurioDatafl
 
 \textbf{Map View template.} A built-in Vega-Lite spec, selectable from the Vega-Lite node's template menu, paints each searched neighborhood with the colour of its modal class, labels it with the neighborhood name, and overlays per-image points sized by dominance percentage. The same colour palette is shared across the segmentation overlay, the per-class bar chart in the inspector, and the Map View, so a building (green) on the canvas is the same green in the chart and on the map.
 
-\textbf{Implementation.} Backend: Python (FastAPI, Transformers, Ultralytics, GeoPandas, Shapely). Frontend: React~19 with TypeScript and Vite. Curio integration: a forked Curio repo with two new \texttt{BoxDescriptor} entries and matching React lifecycle hooks; the diff is shipped as a single \texttt{curio-fork.patch}. Total project outside the Curio fork: $\sim$1.8k lines of TypeScript and $\sim$1.6k lines of Python.
+\textbf{Implementation.} Backend: Python 3.10, FastAPI, Transformers, Ultralytics, GeoPandas, Shapely. Frontend: React~18 with TypeScript and Vite. Curio integration: a forked Curio repo with two new \texttt{BoxDescriptor} entries and matching React lifecycle hooks; the diff is shipped as a single \texttt{curio-fork.patch}. Total project outside the Curio fork: $\sim$1.8k lines of TypeScript and $\sim$1.6k lines of Python.
 
 \section{Evaluation}
 \label{sec:eval}
 
-\textbf{Case study 1: Chicago greenery (\autoref{fig:gallery}).} We ran Mask2Former-Swin-Large fine-tuned on Cityscapes against Street View samples from a Lincoln Park bounding box, with target classes \{vegetation, road, building, sidewalk, sky\}. The Map View renders Lincoln Park (and any other searched neighborhoods) coloured by its modal class; the Neighborhood Summary bar chart, sorted by image count, makes the gradient between residential blocks (more vegetation) and arterial corridors (more road) immediately visible. Stackable filter rules (e.g.~\texttt{vegetation < 0.10} combined with \texttt{road > 0.30}) surface candidate blocks for tree-planting prioritization without any code. The same workflow re-runs identically on Hyde Park or The Loop by typing a new place name.
+\textbf{Case study 1: Chicago greenery (\autoref{fig:gallery}).} We ran Mask2Former-Swin-Large fine-tuned on Cityscapes against Street View samples from a Lincoln Park bounding box, with target classes \{vegetation, road, building, sidewalk, sky\}. The Map View renders Lincoln Park (and any other searched neighborhoods) coloured by its modal class; the Neighborhood Summary bar chart, sorted by image count, makes the gradient between residential blocks (more vegetation) and arterial corridors (more road) immediately visible. Compound filters (e.g.~\texttt{vegetation < 0.10}) surface candidate blocks for tree-planting prioritization without any code. The same workflow re-runs identically on Hyde Park or The Loop by typing a new place name.
 
 \begin{figure*}[tb]
   \centering
@@ -170,7 +179,9 @@ Node-based visual analytics platforms such as Curio~\cite{Moreira2024CurioDatafl
 \section{Conclusion and Future Work}
 \label{sec:conclusion}
 
-We presented a two-node Curio extension that brings pre-trained street-level CV into a no-code dataflow workflow, demonstrated on Chicago greenery and vehicle counting case studies, with seven analytical tasks documented. The natural next steps are (1) GPU-backed inference and a real scaling study (lifting the demo cap), (2) integrating open-vocabulary models so the target classes are not bound to Cityscapes, (3) shipping neighborhood basemaps for additional U.S.~cities, (4) adding a custom-model upload affordance for users with their own checkpoints, and (5) a user study with urban planning students to validate the time-savings claims in \autoref{tab:tasks}, which are currently estimates rather than measurements.
+We presented a two-node Curio extension that brings pre-trained street-level CV into a no-code dataflow workflow, demonstrated on Chicago greenery and vehicle counting case studies, with seven analytical tasks documented. The natural next steps are (1) GPU-backed inference and a real scaling study, (2) integrating open-vocabulary models so the target classes are not bound to Cityscapes, (3) shipping neighborhood basemaps for additional U.S.~cities, (4) adding a custom-model upload affordance, and (5) a user study to validate the time-savings claims in \autoref{tab:tasks}.
+
+\textbf{Code availability.} Source, demo screenshots, and reproduction scripts are at \url{https://github.com/ManeeshJupalle/Street-Level-Vision-Analytics-Node-for-Curio}.
 
 %% if specified like this the section will be omitted in review mode
 \acknowledgments{%
