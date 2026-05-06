@@ -100,7 +100,7 @@ https://github.com/user-attachments/assets/2d75b354-8ef7-4607-acbf-d7bc316a2684
   and external consumers, plus a column-oriented DataFrame projection for in-Curio Vega-Lite.
 - **Compound filtering**: Filter results by any class attribute and operator
   (e.g., `vegetation > 0.30 AND road < 0.20`) directly in the gallery.
-- **Local folder fallback**: point the node at any folder of `.jpg/.png/.webp` files for offline
+- **Local folder fallback**: Point the node at any folder of `.jpg/.png/.webp` files for offline
   analysis when no Google Street View key is available.
 
 ---
