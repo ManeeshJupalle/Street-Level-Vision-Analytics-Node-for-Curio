@@ -9,6 +9,8 @@
 **Authors:** Lakshmi Sravya Rachakonda · Laxmi Sai Maneesh Reddy Jupalle
 **- University of Illinois Chicago**
 
+**Read the paper:** [`paper/CS524_Street-Level Vision Node for Curio_Report.pdf`](paper/CS524_Street-Level%20Vision%20Node%20for%20Curio_Report.pdf) (4-page IEEE VGTC format, with figures and references)
+
 <p align="center">
   <img src="paper/figures/teaser_curio_canvas.png" alt="Curio canvas with Street Vision feeding CV Analysis, which fans out to a Vega-Lite Map View, a per-neighborhood bar chart, and a Table node." width="92%">
 </p>
@@ -173,9 +175,10 @@ A more detailed walkthrough of the three layers (Curio nodes, frontend, backend)
 │       ├── README.md
 │       ├── benchmark.py
 │       └── results.json
-├── paper/                    # IEEE VGTC 4-page paper (LaTeX)
-│   ├── main.tex
-│   ├── template.bib
+├── paper/                    # IEEE VGTC 4-page paper
+│   ├── CS524_Street-Level Vision Node for Curio_Report.pdf  # Compiled paper
+│   ├── main.tex              #   LaTeX source
+│   ├── template.bib          #   Bibliography
 │   └── figures/              #   Teaser, architecture, wizard, inspector
 ├── cache/                    # Locally-fetched Street View imagery (gitignored at runtime)
 └── model_cache/              # HuggingFace + Ultralytics model weights (gitignored)
@@ -388,7 +391,7 @@ demo-mode 20-image cap clamped the larger batch sizes):
 | Case study configs | [`evaluation/case_studies/*/config.json`](evaluation/case_studies/) | Hand-authored from M2 / M3 runs |
 | Task inventory (7 tasks) | [`evaluation/task_inventory.md`](evaluation/task_inventory.md) | Manual: analytical tasks newly enabled by the node |
 | Paper figures | [`paper/figures/`](paper/figures/) | Curio canvas screenshots (teaser, wizard, inspector) + hand-authored architecture diagram |
-| 4-page IEEE VGTC paper | [`paper/main.tex`](paper/main.tex) | LaTeX (compile via Overleaf or `pdflatex`) |
+| 4-page IEEE VGTC paper (PDF) | [`paper/CS524_Street-Level Vision Node for Curio_Report.pdf`](paper/CS524_Street-Level%20Vision%20Node%20for%20Curio_Report.pdf) | LaTeX source: [`paper/main.tex`](paper/main.tex) (compile via Overleaf or `pdflatex`) |
 | Chicago basemap | [`data/chicago_neighborhoods.geojson`](data/chicago_neighborhoods.geojson) | Curated 98-polygon GeoJSON, served with centroids injected at request time |
 
 Every artifact above is reproducible from the pinned dependencies in `requirements.txt` and
@@ -444,14 +447,15 @@ Interactive Swagger docs: `http://127.0.0.1:8000/docs` once the backend is runni
   the node enables, with "how it was done before" baselines
 - [`curio-integration/README.md`](curio-integration/README.md): how to graft the two nodes
   onto a clean Curio clone
-- [`paper/README.md`](paper/README.md): paper-build instructions
 
 ---
 
 ## Citation & License
 
 This project was developed for academic purposes as part of CS 524 at the University of
-Illinois Chicago. The companion 4-page IEEE VGTC paper is in [`paper/main.tex`](paper/main.tex).
+Illinois Chicago. The companion 4-page IEEE VGTC paper is available as a compiled PDF
+([`paper/CS524_Street-Level Vision Node for Curio_Report.pdf`](paper/CS524_Street-Level%20Vision%20Node%20for%20Curio_Report.pdf))
+with LaTeX source in [`paper/main.tex`](paper/main.tex).
 
 If you build on this work, please cite:
 
