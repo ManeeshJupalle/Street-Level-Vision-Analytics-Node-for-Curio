@@ -9,8 +9,6 @@
 **Authors:** Lakshmi Sravya Rachakonda · Laxmi Sai Maneesh Reddy Jupalle
 **- University of Illinois Chicago**
 
-**Read the paper:** [`paper/CS524_Street-Level Vision Node for Curio_Report.pdf`](paper/CS524_Street-Level%20Vision%20Node%20for%20Curio_Report.pdf) (4-page IEEE VGTC format, with figures and references)
-
 <p align="center">
   <img src="paper/figures/teaser_curio_canvas.png" alt="Curio canvas with Street Vision feeding CV Analysis, which fans out to a Vega-Lite Map View, a per-neighborhood bar chart, and a Table node." width="92%">
 </p>
@@ -58,6 +56,7 @@ instructor feedback in M2: it forces a clean serialization boundary between infe
 visualization, and the GeoJSON output slots into Curio's existing visualization nodes with no
 special-casing.
 
+**Read the paper:** [`paper/CS524_Street-Level Vision Node for Curio_Report.pdf`](paper/CS524_Street-Level%20Vision%20Node%20for%20Curio_Report.pdf) (4-page IEEE VGTC format, with figures and references)
 ---
 
 ## Demo
