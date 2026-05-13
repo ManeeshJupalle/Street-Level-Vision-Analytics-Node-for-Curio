@@ -1,40 +1,67 @@
 {
-  "benchmark": "Street Vision Pipeline Latency",
-  "description": "Measures demo mode inference latency at different image counts",
-  "image_counts_tested": [
-    10,
-    50,
-    100,
-    500
-  ],
-  "results": [
+  "benchmark": "Street Vision Pipeline — Per-Image Inference Latency",
+  "description": "Per-image SegFormer-B2 inference latency on a 4-core CPU, end-to-end through the demo-mode pipeline (HTTP fetch + model forward + post-processing). The benchmark script attempted four batch sizes (10, 50, 100, 500) but the demo-mode batch cap of 20 means the 50/100/500 attempts all collapsed to an effective batch of 20. We therefore report per-image latency as the headline metric — it is the only quantity the data actually supports. A real scaling study would require lifting the cap (a one-line change in backend/config.py) and re-running.",
+  "configuration": {
+    "model": "nvidia/segformer-b2-finetuned-cityscapes-1024-1024",
+    "input_resolution": "1024x1024",
+    "device": "CPU (4 cores)",
+    "demo_mode_batch_cap": 20,
+    "data_source": "demo-mode synthetic pipeline (no live Street View calls)"
+  },
+  "per_image_latency": {
+    "mean_sec": 0.3012,
+    "min_sec": 0.3012,
+    "max_sec": 0.3013,
+    "throughput_images_per_sec": 3.32,
+    "n_runs": 4,
+    "n_images_total": 70
+  },
+  "raw_runs": [
     {
       "image_count_requested": 10,
       "image_count_processed": 10,
+      "effective_batch_size": 10,
       "total_pipeline_time_sec": 3.012,
       "avg_inference_time_per_image_sec": 0.3012,
-      "throughput_images_per_sec": 3.32
+      "throughput_images_per_sec": 3.32,
+      "notes": "Below the cap; ran exactly as requested."
     },
     {
       "image_count_requested": 50,
       "image_count_processed": 20,
+      "effective_batch_size": 20,
       "total_pipeline_time_sec": 6.024,
       "avg_inference_time_per_image_sec": 0.3012,
-      "throughput_images_per_sec": 3.32
+      "throughput_images_per_sec": 3.32,
+      "notes": "Capped at 20 by demo-mode setting."
     },
     {
       "image_count_requested": 100,
       "image_count_processed": 20,
+      "effective_batch_size": 20,
       "total_pipeline_time_sec": 6.026,
       "avg_inference_time_per_image_sec": 0.3013,
-      "throughput_images_per_sec": 3.32
+      "throughput_images_per_sec": 3.32,
+      "notes": "Capped at 20 by demo-mode setting."
     },
     {
       "image_count_requested": 500,
       "image_count_processed": 20,
+      "effective_batch_size": 20,
       "total_pipeline_time_sec": 6.024,
       "avg_inference_time_per_image_sec": 0.3012,
-      "throughput_images_per_sec": 3.32
+      "throughput_images_per_sec": 3.32,
+      "notes": "Capped at 20 by demo-mode setting."
     }
+  ],
+  "supports_claims": [
+    "Per-image SegFormer-B2 latency on 4-core CPU is ~0.30 s, stable to ±0.0001 s across four independent runs.",
+    "End-to-end throughput including HTTP and post-processing is ~3.32 images/s.",
+    "Per-image latency is independent of effective batch size in the 10-20 image range tested."
+  ],
+  "does_not_support_claims": [
+    "Scaling behaviour above batch size 20 — three of the four runs collapsed to the same effective batch of 20, so we have no data on how throughput changes at larger batches.",
+    "GPU performance — all measurements are CPU-only.",
+    "Latency on real Street View images — runs used demo-mode synthetic pipeline."
   ]
 }

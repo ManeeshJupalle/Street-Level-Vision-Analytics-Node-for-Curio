@@ -30,7 +30,7 @@ node_modules/
 *.swp
 *.swo
 
-# Claude Code per-user state
+# Editor / IDE per-user state
 .claude/
 
 # OS
